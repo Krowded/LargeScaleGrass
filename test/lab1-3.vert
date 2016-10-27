@@ -1,20 +1,20 @@
-#version 150
+#version 330
 
 in vec2 in_Position; //Z-part always 0
 in vec2 in_Normal; //Same here
 in float in_Thickness;
 in float in_Hue;
 in vec2 in_TexCoords;
-in mat4 model;
+in mat4 modelToWorld;
 
-flat out int textureType;
+flat out float textureType;
+flat out float frag_hue;
 out vec2 frag_texCoords;
 out vec3 frag_normal;
-out float frag_hue;
-out vec3 cameraVector;
+out vec3 frag_viewVector;
 
-uniform mat4 world;
-uniform mat4 projection; //Combine with world?
+uniform mat4 worldToView;
+uniform mat4 worldToProjection;
 uniform mat4 tileTransformation;
 uniform float time;
 
@@ -24,29 +24,37 @@ uniform float time;
 
 void main(void)
 {
-	textureType = int(mod(gl_InstanceID,4)); //Thinking this reduces work in fragment shader. Could be wrong? (not working)
-
 	//Thickness tapers off towards top to make a pointy blade of grass
-	float thickness = (16-(gl_VertexID*0.5))*0.0625*in_Thickness;
+	//float thickness = (16-(gl_VertexID*0.5))*(1/16)*in_Thickness;
+	float thickness = in_Thickness-(gl_VertexID*0.03125)*in_Thickness; //Optimized
 
-	//Half the vertices expand towards z, other half towards -z (written like this to avoid branching)
-	gl_Position = vec4(in_Position.x, in_Position.y, (1 - 2*mod(gl_VertexID,2))*thickness, 1.0);
-	gl_Position = tileTransformation * model * gl_Position;
+	//Half the vertices expand towards z, other half towards -z
+	//gl_Position = vec4(in_Position.xy, (1 - 2*mod(gl_VertexID,2))*thickness, 1.0);
+	gl_Position.xzw = vec3(in_Position.x, thickness - 2*thickness*mod(gl_VertexID,2), 1.0); //Optimized
+	//Add some "random" movement to make it seem more alive. Could make this scale so there's more movement at the tip, but don't think it's noticable enough.
+	gl_Position.y = in_Position.y + 0.05*sin(time*0.05 + gl_InstanceID*0.5);
 	
-	//Wind force acting on the grass as an invisible cylinder moving across it
-	float windCylinderRadius = 2;
-	vec2 windCylinderPosition = vec2(5*tan(time*0.005)-2, 2);
-	vec2 windVector = vec2(gl_Position.x, gl_Position.y) - windCylinderPosition;
+	//ModelToWorld transformations
+	gl_Position = tileTransformation * modelToWorld * gl_Position;
+	
+	//Wind force acting on the grass as an invisible cylinder moving across it (in the x-direction, leaving z untouched)
+	const float windCylinderRadius = 2;
+	vec2 windCylinderPosition = vec2(5*tan(time*0.005)-2, windCylinderRadius);
+	vec2 windVector = gl_Position.xy - windCylinderPosition;
 	float windDistance = length(windVector);
 	float force = max(0, windCylinderRadius - windDistance);
-	gl_Position = vec4( gl_Position.x + windVector.x*pow(force,2), gl_Position.y + windVector.y*pow(force,5), gl_Position.z, 1.0);
+	vec2 forceVector = vec2(pow(force,2), pow(force,5));
+	gl_Position.xy += windVector.xy * forceVector.xy;
 
-	gl_Position = projection * world * gl_Position;	
+	//WorldToProjection transformations
+	gl_Position = worldToProjection * gl_Position;	
 
-	cameraVector = vec3(world * model * vec4(in_Position, 0, 1.0)); // For specular
+	//Pass along stuff to fragment shader
+	textureType = mod(gl_InstanceID,4)*0.25;
+	frag_viewVector = -vec3(tileTransformation * modelToWorld * vec4(in_Position, 0, 1.0)); // For specular
 	frag_hue = in_Hue;
 	frag_texCoords = in_TexCoords;
-	frag_normal = mat3(projection*world*model)*vec3(in_Normal,0);
+	frag_normal = mat3(modelToWorld)*vec3(in_Normal,0); //Assuming no awkward scaling
 }
 
 

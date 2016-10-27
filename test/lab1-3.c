@@ -130,19 +130,19 @@ void generateGrass() {
     	glBufferData(GL_ARRAY_BUFFER, numberOfBlades * sizeof(mat4), grassTransformations, GL_STATIC_DRAW);
 
         // Set attribute pointers for matrix (4 times vec4)
-        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")); 
-        glVertexAttribPointer(glGetAttribLocation(grassShader, "model"), 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(0 + offset*sizeof(mat4)));
-        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")+1); 
-        glVertexAttribPointer(glGetAttribLocation(grassShader, "model")+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4) + offset*sizeof(mat4)));
-        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")+2); 
-        glVertexAttribPointer(glGetAttribLocation(grassShader, "model")+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4) + offset*sizeof(mat4)));
-        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")+3); 
-        glVertexAttribPointer(glGetAttribLocation(grassShader, "model")+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4) + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "modelToWorld")); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "modelToWorld"), 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(0 + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "modelToWorld")+1); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "modelToWorld")+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4) + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "modelToWorld")+2); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "modelToWorld")+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4) + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "modelToWorld")+3); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "modelToWorld")+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4) + offset*sizeof(mat4)));
 
-        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model"), 1);
-        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model")+1, 1);
-        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model")+2, 1);
-        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model")+3, 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "modelToWorld"), 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "modelToWorld")+1, 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "modelToWorld")+2, 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "modelToWorld")+3, 1);
 
         printError("upload model");
 
@@ -203,7 +203,7 @@ void generateTiles() {
 	for(int i = 0; i < numberOfTiles; ++i)
 	{
 		Tiles[i].position = ((vec3*)tilePositions)[i];
-		Tiles[i].offset = rand() % (numberOfBlades- maxGrassPerTile*5);
+		Tiles[i].offset = rand() % (numberOfBlades - maxGrassPerTile*5);
 	}
 	
 }
@@ -244,9 +244,6 @@ void calculateNormals() {
 
 void init(void)
 {
-
-	for(int i = 0; i < 32; i++)
-		std::cout << textureCoordinates[i*2] << textureCoordinates[i*2+1] << std::endl;
 	/* //For combining models...
 	int increment = 128;
 	std::cout << std::endl;
@@ -323,22 +320,17 @@ void display(void)
 	};
 	
 	//Upload matrices
-	glUniformMatrix4fv(glGetUniformLocation(grassShader, "world"), 1, GL_TRUE, worldMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(grassShader, "projection"), 1, GL_TRUE, projectionMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(grassShader, "worldToView"), 1, GL_TRUE, worldMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(grassShader, "worldToProjection"), 1, GL_TRUE, Mult(projectionMatrix, worldMatrix).m);
 
 	//Light vectors
-	vec3 upVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(0,1,0));
+	vec3 upVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(0,1, -1));
 	glUniform3fv(glGetUniformLocation(grassShader, "up"), 1, &upVector.x);
 	vec3 lightVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(1,1,0));
 	glUniform3fv(glGetUniformLocation(grassShader, "light"), 1, &lightVector.x);
 
 	//Time
 	glUniform1f(glGetUniformLocation(grassShader, "time"), globalTime);
-
-	//Tile position
-	mat4 tileTransformation = T(-0.5,0,0);
-	glUniformMatrix4fv(glGetUniformLocation(grassShader, "tileTransformation"), 1, GL_TRUE, tileTransformation.m);
-
 
 	//Draw the grass
 	glDisable(GL_CULL_FACE); //Both sides need to be visible
