@@ -299,13 +299,15 @@ void display(void)
 
 	mat4 worldMatrix = 
 	{
-		cos(globalTime/100.0f), 0.0f, -sin(globalTime/100.0f), -xview,
+		cos(globalTime/1000.0f), 0.0f, -sin(globalTime/1000.0f), -xview,
 		0.0f,                1.0f, 0.0f,                 -yview,
-		sin(globalTime/100.0f), 0.0f, cos(globalTime/100.0f),  0.0f,
+		sin(globalTime/1000.0f), 0.0f, cos(globalTime/1000.0f),  0.0f,
 		0.0f,                0.0f, 0.0f,                 1.0f 
 	};
 
-//	worldMatrix = T(-xview,-yview,0);
+	//worldMatrix = Ry(M_PI/2);
+	//worldMatrix = Mult(T(-xview,-yview,0),worldMatrix);
+	//worldMatrix = T(-xview,-yview,0);
 
 	worldMatrix = Mult(Rx(xangle), worldMatrix);
 
