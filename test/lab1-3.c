@@ -41,6 +41,7 @@ const GLint numberOfBlades = 16000;
 const GLfloat grassMinSize = 0.002;
 const GLfloat grassMaxSize = 0.05;
 const GLfloat grassMinThickness = 0.01;
+const GLfloat grassMinHue = 0.1;
 
 GLuint grassShader;
 GLuint grassTexture;
@@ -100,7 +101,7 @@ void generateGrass() {
 
 
 		thickness[i] = (rand() % 1500)/10000.0f + grassMinThickness;
-		hue[i] = float((rand() % 1000))/1000.0f + 0.1;
+		hue[i] = float((rand() % 1500))/1000.0f + grassMinHue;
  	}
 
 	//Generate VAOs, VBOs
@@ -185,10 +186,10 @@ void generateGrass() {
 
 
 		//Texture coordinates
-		glVertexAttribPointer(glGetAttribLocation(grassShader, "in_TexCoords"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
-		glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_TexCoords"));
 		glBindBuffer(GL_ARRAY_BUFFER, texCoordBufferObjID);
 		glBufferData(GL_ARRAY_BUFFER, vertNum*2*sizeof(GLfloat), textureCoordinates, GL_STATIC_DRAW);
+		glVertexAttribPointer(glGetAttribLocation(grassShader, "in_TexCoords"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
+		glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_TexCoords"));
 
 		printError("upload texture coordinates");
 
@@ -271,8 +272,10 @@ void init(void)
 	
 	//Upload textures
 	glUniform1i(glGetUniformLocation(grassShader, "tex"), 0); // Texture unit 0
-	LoadTGATextureSimple("texture.tga", &grassTexture);
+	LoadTGATextureSimple((char*)"texture.tga", &grassTexture);
 	glBindTexture(GL_TEXTURE_2D, grassTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	printError("upload textures");
 
@@ -307,7 +310,7 @@ void display(void)
 
 	//worldMatrix = Ry(M_PI/2);
 	//worldMatrix = Mult(T(-xview,-yview,0),worldMatrix);
-	//worldMatrix = T(-xview,-yview,0);
+	worldMatrix = T(-xview,-yview,0);
 
 	worldMatrix = Mult(Rx(xangle), worldMatrix);
 

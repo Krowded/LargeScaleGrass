@@ -38,8 +38,8 @@ void main(void)
 	specular = max(specularConstant*specular, 0.0);
 
 	float shade = min(1, ambient + diffuse + specular);
-	//vec2 adjustedTexCoords = vec2((frag_texCoords.s+textureType)*0.25, frag_texCoords.t);
-	vec4 texOut = texture(tex, frag_texCoords);
+	vec2 adjustedTexCoords = vec2((frag_texCoords.s+textureType)*0.25, frag_texCoords.t);
+	vec4 texOut = texture(tex, adjustedTexCoords);
  	
-	out_Color = shade * vec4(frag_hue*texOut.r, texOut.g, frag_hue*texOut.b, 0.0);
+	out_Color = shade * vec4(frag_hue*texOut.r, texOut.g, frag_hue*texOut.b, texOut.w);
 }
