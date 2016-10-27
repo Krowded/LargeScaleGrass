@@ -1318,3 +1318,55 @@ GLfloat CombinedNormals[] = {
 	0.655852f, -0.75489f,
 	0.655852f, -0.75489f,
 };
+
+//Texture coordinates
+const float width = 15.0f;
+GLfloat textureCoordinates[] = {
+	0, 0,
+	1, 0,
+
+	0, 1/width,
+	1, 1/width,
+
+	0, 2/width,
+	1, 2/width,
+
+	0, 3/width,
+	1, 3/width,
+
+	0, 4/width,
+	1, 4/width,
+	
+	0, 5/width,
+	1, 5/width,
+
+	0, 6/width,
+	1, 6/width,
+
+	0, 7/width,
+	1, 7/width,
+
+	0, 8/width,
+	1, 8/width,
+
+	0, 9/width,
+	1, 9/width,
+
+	0, 10/width,
+	1, 10/width,
+
+	0, 11/width,
+	1, 11/width,
+
+	0, 12/width,
+	1, 12/width,
+
+	0, 13/width,
+	1, 13/width,
+
+	0, 14/width,
+	1, 14/width,
+
+	0, 15/width,
+	1, 15/width,
+};

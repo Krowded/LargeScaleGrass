@@ -36,13 +36,14 @@ GLfloat tilePositions[] = {
 };
 
 const GLfloat baseSizeModifier = 1;
-const GLint maxGrassPerTile = 2000;
+const GLint maxGrassPerTile = 1000;
 const GLint numberOfBlades = 16000;
 const GLfloat grassMinSize = 0.002;
 const GLfloat grassMaxSize = 0.05;
 const GLfloat grassMinThickness = 0.01;
 
-GLuint program;
+GLuint grassShader;
+GLuint grassTexture;
 GLfloat globalTime = 0;
 
 //Transformations
@@ -100,18 +101,20 @@ void generateGrass() {
 
 		thickness[i] = (rand() % 1500)/10000.0f + grassMinThickness;
 		hue[i] = float((rand() % 1000))/1000.0f + 0.1;
-		textureType[i] = rand() % 5;
  	}
 
 	//Generate VAOs, VBOs
 	glGenVertexArrays(5, grassVAOs);
 	glGenBuffers(5, grassVertexBuffers);
 	glGenBuffers(5, grassNormalBuffers);
-	GLuint indexBufferObjID;
+	GLuint indexBufferObjID, texCoordBufferObjID;
 	glGenBuffers(1, &indexBufferObjID);
+	glGenBuffers(1, &texCoordBufferObjID);
     glGenBuffers(1, &grassTransformationBuffer);
     glGenBuffers(1, &grassHueBuffer);
     glGenBuffers(1, &grassThicknessBuffer);
+
+
 
     // Set transformation matrices as an instance vertex attribute (with divisor 1)
     // NOTE: We're cheating a little by taking the, now publicly declared, VAO of the model's mesh(es) and adding new vertexAttribPointers
@@ -122,53 +125,73 @@ void generateGrass() {
 
         GLuint VAO = grassVAOs[i];
         glBindVertexArray(VAO);
-
     	glBindBuffer(GL_ARRAY_BUFFER, grassTransformationBuffer);
     	glBufferData(GL_ARRAY_BUFFER, numberOfBlades * sizeof(mat4), grassTransformations, GL_STATIC_DRAW);
 
         // Set attribute pointers for matrix (4 times vec4)
-        glEnableVertexAttribArray(glGetAttribLocation(program, "model")); 
-        glVertexAttribPointer(glGetAttribLocation(program, "model"), 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(0 + offset*sizeof(mat4)));
-        glEnableVertexAttribArray(glGetAttribLocation(program, "model")+1); 
-        glVertexAttribPointer(glGetAttribLocation(program, "model")+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4) + offset*sizeof(mat4)));
-        glEnableVertexAttribArray(glGetAttribLocation(program, "model")+2); 
-        glVertexAttribPointer(glGetAttribLocation(program, "model")+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4) + offset*sizeof(mat4)));
-        glEnableVertexAttribArray(glGetAttribLocation(program, "model")+3); 
-        glVertexAttribPointer(glGetAttribLocation(program, "model")+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4) + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "model"), 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(0 + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")+1); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "model")+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4) + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")+2); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "model")+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4) + offset*sizeof(mat4)));
+        glEnableVertexAttribArray(glGetAttribLocation(grassShader, "model")+3); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "model")+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4) + offset*sizeof(mat4)));
 
-        glVertexAttribDivisor(glGetAttribLocation(program, "model"), 1);
-        glVertexAttribDivisor(glGetAttribLocation(program, "model")+1, 1);
-        glVertexAttribDivisor(glGetAttribLocation(program, "model")+2, 1);
-        glVertexAttribDivisor(glGetAttribLocation(program, "model")+3, 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model"), 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model")+1, 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model")+2, 1);
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "model")+3, 1);
+
+        printError("upload model");
 
         glBindBuffer(GL_ARRAY_BUFFER, grassHueBuffer);
     	glBufferData(GL_ARRAY_BUFFER, numberOfBlades * sizeof(GLfloat), hue, GL_STATIC_DRAW);
-    	glEnableVertexAttribArray(glGetAttribLocation(program, "in_Hue")); 
-        glVertexAttribPointer(glGetAttribLocation(program, "in_Hue"), 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)(offset*sizeof(GLfloat)));
-        glVertexAttribDivisor(glGetAttribLocation(program, "in_Hue"), 1);
+    	glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_Hue")); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "in_Hue"), 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)(offset*sizeof(GLfloat)));
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "in_Hue"), 1);
+
+        printError("upload hues");
 
 		glBindBuffer(GL_ARRAY_BUFFER, grassThicknessBuffer);
     	glBufferData(GL_ARRAY_BUFFER, numberOfBlades * sizeof(GLfloat), thickness, GL_STATIC_DRAW);
-    	glEnableVertexAttribArray(glGetAttribLocation(program, "in_Thickness")); 
-        glVertexAttribPointer(glGetAttribLocation(program, "in_Thickness"), 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)(offset*sizeof(GLfloat)));
-        glVertexAttribDivisor(glGetAttribLocation(program, "in_Thickness"), 1);
+    	glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_Thickness")); 
+        glVertexAttribPointer(glGetAttribLocation(grassShader, "in_Thickness"), 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), (GLvoid*)(offset*sizeof(GLfloat)));
+        glVertexAttribDivisor(glGetAttribLocation(grassShader, "in_Thickness"), 1);
 
+        printError("upload thickness");
 
 		// VBO for vertex data
 		glBindBuffer(GL_ARRAY_BUFFER, grassVertexBuffers[i]);
 		glBufferData(GL_ARRAY_BUFFER, vertNum*2*sizeof(GLfloat), types[i], GL_STATIC_DRAW);
-		glVertexAttribPointer(glGetAttribLocation(program, "in_Position"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
-		glEnableVertexAttribArray(glGetAttribLocation(program, "in_Position"));
+		glVertexAttribPointer(glGetAttribLocation(grassShader, "in_Position"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
+		glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_Position"));
+
+		printError("upload position");
 
 		//VBO for normals
 		glBindBuffer(GL_ARRAY_BUFFER, grassNormalBuffers[i]);
 		glBufferData(GL_ARRAY_BUFFER, vertNum*2*sizeof(GLfloat), normals[i], GL_STATIC_DRAW);
-		glVertexAttribPointer(glGetAttribLocation(program, "in_Normal"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
-		glEnableVertexAttribArray(glGetAttribLocation(program, "in_Normal"));
+		glVertexAttribPointer(glGetAttribLocation(grassShader, "in_Normal"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
+		glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_Normal"));
+
+		printError("upload normal");
 
 		//Upload indices
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObjID);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, numOfIndices*sizeof(GLuint), indices, GL_STATIC_DRAW);
+
+		printError("upload indices");
+
+
+		//Texture coordinates
+		glVertexAttribPointer(glGetAttribLocation(grassShader, "in_TexCoords"), 2, GL_FLOAT, GL_FALSE, 0, 0); 
+		glEnableVertexAttribArray(glGetAttribLocation(grassShader, "in_TexCoords"));
+		glBindBuffer(GL_ARRAY_BUFFER, texCoordBufferObjID);
+		glBufferData(GL_ARRAY_BUFFER, vertNum*2*sizeof(GLfloat), textureCoordinates, GL_STATIC_DRAW);
+
+		printError("upload texture coordinates");
+
 
         glBindVertexArray(0);
     }	
@@ -220,6 +243,9 @@ void calculateNormals() {
 
 void init(void)
 {
+
+	for(int i = 0; i < 32; i++)
+		std::cout << textureCoordinates[i*2] << textureCoordinates[i*2+1] << std::endl;
 	/* //For combining models...
 	int increment = 128;
 	std::cout << std::endl;
@@ -240,9 +266,16 @@ void init(void)
 	printError("GL inits");
 
 	// Load and compile shader
-	program = loadShaders("lab1-3.vert", "lab1-3.frag");
+	grassShader = loadShaders("lab1-3.vert", "lab1-3.frag");
 	printError("init shader");
 	
+	//Upload textures
+	glUniform1i(glGetUniformLocation(grassShader, "tex"), 0); // Texture unit 0
+	LoadTGATextureSimple("texture.tga", &grassTexture);
+	glBindTexture(GL_TEXTURE_2D, grassTexture);
+
+	printError("upload textures");
+
 	// Generate and upload geometry to the GPU:
 	generateGrass();
 	generateTiles();
@@ -285,21 +318,21 @@ void display(void)
 	};
 	
 	//Upload matrices
-	glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_TRUE, worldMatrix.m);
-	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_TRUE, projectionMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(grassShader, "world"), 1, GL_TRUE, worldMatrix.m);
+	glUniformMatrix4fv(glGetUniformLocation(grassShader, "projection"), 1, GL_TRUE, projectionMatrix.m);
 
 	//Light vectors
 	vec3 upVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(0,1,0));
-	glUniform3fv(glGetUniformLocation(program, "up"), 1, &upVector.x);
+	glUniform3fv(glGetUniformLocation(grassShader, "up"), 1, &upVector.x);
 	vec3 lightVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(1,1,0));
-	glUniform3fv(glGetUniformLocation(program, "light"), 1, &lightVector.x);
+	glUniform3fv(glGetUniformLocation(grassShader, "light"), 1, &lightVector.x);
 
 	//Time
-	glUniform1f(glGetUniformLocation(program, "time"), globalTime);
+	glUniform1f(glGetUniformLocation(grassShader, "time"), globalTime);
 
 	//Tile position
 	mat4 tileTransformation = T(-0.5,0,0);
-	glUniformMatrix4fv(glGetUniformLocation(program, "tileTransformation"), 1, GL_TRUE, tileTransformation.m);
+	glUniformMatrix4fv(glGetUniformLocation(grassShader, "tileTransformation"), 1, GL_TRUE, tileTransformation.m);
 
 
 	//Draw the grass
@@ -307,7 +340,7 @@ void display(void)
 	for(int j = 0; j < numberOfTiles; ++j)
 	{	
 		mat4 tileTransformation = T(Tiles[j].position.x,Tiles[j].position.y,Tiles[j].position.z);
-		glUniformMatrix4fv(glGetUniformLocation(program, "tileTransformation"), 1, GL_TRUE, tileTransformation.m);
+		glUniformMatrix4fv(glGetUniformLocation(grassShader, "tileTransformation"), 1, GL_TRUE, tileTransformation.m);
 		for(int i = 0; i < 5; ++i)
 		{
 			glBindVertexArray(grassVAOs[i]);
@@ -370,17 +403,17 @@ void OnTimer(int value)
 
 int main(int argc, char *argv[])
 {
-	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME);
-	glutTimerFunc(20, &OnTimer, t);
-
 	glutInit(&argc, argv);
 	glutInitContextVersion(3, 2);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(640, 480);
-	glutCreateWindow ((char*)"GL3 white triangle example");
-	glutDisplayFunc(display); 	
+	glutCreateWindow ((char*)"Grass");
+	glutDisplayFunc(display);
 	glutKeyboardFunc(KeyboardInput);
 	init();
+
+	GLfloat t = (GLfloat)glutGet(GLUT_ELAPSED_TIME);
+	glutTimerFunc(20, &OnTimer, t);
 
 	glutMainLoop();
 	return 0;
