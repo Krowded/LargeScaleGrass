@@ -35,7 +35,7 @@ void main(void)
 
 	// Specular lighting
 	vec3 r = reflect(light, normal);
-	vec3 v = normalize(frag_viewVector); // View direction
+	vec3 v = normalize(frag_viewVector);
 	float specular = dot(r, v);
 	specular = pow(max(specular,0), 150.0);
 

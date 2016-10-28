@@ -1,11 +1,12 @@
 #version 330
 
-in vec2 in_Position; //Z-part always 0
-in vec2 in_Normal; //Same here
+//in vec2 inPosition; //Z-part always 0
+//in vec2 in_Normal; //Same here
 in float in_Thickness;
 in float in_Hue;
 in vec2 in_TexCoords;
 in mat4 modelToWorld;
+in mat4 tileTransformation;
 
 flat out float textureType;
 flat out float frag_hue;
@@ -13,9 +14,9 @@ out vec2 frag_texCoords;
 out vec3 frag_normal;
 out vec3 frag_viewVector;
 
-uniform mat4 worldToView;
+uniform vec2 vertices[160];
+uniform vec2 normals[160];
 uniform mat4 worldToProjection;
-uniform mat4 tileTransformation;
 uniform float time;
 
 //uniform float globalLength //Can be used to simulate grass growing as well as give external control. Good for demo
@@ -24,6 +25,11 @@ uniform float time;
 
 void main(void)
 {
+	int index = int(mod(gl_InstanceID,5))*32 + gl_VertexID;
+	vec2 in_Position = vertices[index];
+	vec2 in_Normal = normals[index];
+
+
 	//Thickness tapers off towards top to make a pointy blade of grass
 	//float thickness = (16-(gl_VertexID*0.5))*(1/16)*in_Thickness;
 	float thickness = in_Thickness-(gl_VertexID*0.03125)*in_Thickness; //Optimized

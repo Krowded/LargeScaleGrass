@@ -50,7 +50,7 @@ GLuint indices[] =
 	29, 31, 30,
 };
 
-GLuint CombinedIndices[] = 
+GLuint combinedIndices[] = 
 {
 	0, 1, 2,
 	1, 3, 2,
@@ -286,54 +286,55 @@ GLuint CombinedIndices[] =
 ////////////Grass types
 
 
-GLfloat Straight[] =
+GLfloat Zero[] =
 {
 	0.0f,0.0f,
 	0.0f,0.0f,
-	0.0f,0.1f,
-	0.0f,0.1f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,0.2f,
-	0.0f,0.2f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,0.3f,
-	0.0f,0.3f,
 
-	0.0f,0.4f,
-	0.0f,0.4f,
+	0.0f,0.0f,
+	0.0f,0.0f,
+
+	0.0f,0.0f,
+	0.0f,0.0f,
 	
-	0.0f,0.5f,
-	0.0f,0.5f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,0.6f,
-	0.0f,0.6f,
+	0.0f,0.0f,
+	0.0f,0.0f,		
+	
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,0.7f,
-	0.0f,0.7f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,0.8f,
-	0.0f,0.8f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,0.9f,
-	0.0f,0.9f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,1.0f,
-	0.0f,1.0f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,1.1f,
-	0.0f,1.1f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,1.2f,
-	0.0f,1.2f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,1.3f,
-	0.0f,1.3f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 
-	0.0f,1.4f,
-	0.0f,1.4f,
-
-	0.0f,1.5f,
-	0.0f,1.5f,
+	0.0f,0.0f,
+	0.0f,0.0f,
 };
 
 GLfloat Type1[] =
@@ -587,7 +588,7 @@ GLfloat Type5[] =
 	2.43f,2.98f,
 };
 
-GLfloat CombinedVertices[] = {
+GLfloat combinedVertices[] = {
 	0.0f,0.0f,
 	0.0f,0.0f,
 	-0.19f,0.89f,
@@ -1077,7 +1078,7 @@ GLfloat Type5Normals[] = {
 	0.655852f, -0.75489f,
 };
 
-GLfloat CombinedNormals[] = {
+GLfloat combinedNormals[] = {
 	-1.0f, 0.0f,
 	-1.0f, 0.0f,
 	
@@ -1372,8 +1373,203 @@ GLfloat textureCoordinates[] = {
 	1.0f, 15.0f/width,
 };
 
-/*
-GLfloat textureCoordinates[] = {
+GLfloat combinedTextureCoordinates[] = {
+	0.0f, 0.0f,
+	1.0f, 0.0f,
+
+	1.0f, 1.0f/width,
+	0.0f, 1.0f/width,
+	
+
+	0.0f, 2.0f/width,
+	1.0f, 2.0f/width,
+
+	1.0f, 3.0f/width,
+	0.0f, 3.0f/width,
+
+	0.0f, 4.0f/width,
+	1.0f, 4.0f/width,
+	
+	1.0f, 5.0f/width,
+	0.0f, 5.0f/width,
+
+	0.0f, 6.0f/width,
+	1.0f, 6.0f/width,
+
+	1.0f, 7.0f/width,
+	0.0f, 7.0f/width,
+
+	0.0f, 8.0f/width,
+	1.0f, 8.0f/width,
+
+	1.0f, 9.0f/width,
+	0.0f, 9.0f/width,
+
+	0.0f, 10.0f/width,
+	1.0f, 10.0f/width,
+
+	1.0f, 11.0f/width,
+	0.0f, 11.0f/width,
+	
+	0.0f, 12.0f/width,
+	1.0f, 12.0f/width,
+
+	1.0f, 13.0f/width,
+	0.0f, 13.0f/width,
+	
+	0.0f, 14.0f/width,
+	1.0f, 14.0f/width,
+
+	1.0f, 15.0f/width,
+	0.0f, 15.0f/width,
+
+	0.0f, 0.0f,
+	1.0f, 0.0f,
+
+	1.0f, 1.0f/width,
+	0.0f, 1.0f/width,
+	
+
+	0.0f, 2.0f/width,
+	1.0f, 2.0f/width,
+
+	1.0f, 3.0f/width,
+	0.0f, 3.0f/width,
+
+	0.0f, 4.0f/width,
+	1.0f, 4.0f/width,
+	
+	1.0f, 5.0f/width,
+	0.0f, 5.0f/width,
+
+	0.0f, 6.0f/width,
+	1.0f, 6.0f/width,
+
+	1.0f, 7.0f/width,
+	0.0f, 7.0f/width,
+
+	0.0f, 8.0f/width,
+	1.0f, 8.0f/width,
+
+	1.0f, 9.0f/width,
+	0.0f, 9.0f/width,
+
+	0.0f, 10.0f/width,
+	1.0f, 10.0f/width,
+
+	1.0f, 11.0f/width,
+	0.0f, 11.0f/width,
+	
+	0.0f, 12.0f/width,
+	1.0f, 12.0f/width,
+
+	1.0f, 13.0f/width,
+	0.0f, 13.0f/width,
+	
+	0.0f, 14.0f/width,
+	1.0f, 14.0f/width,
+
+	1.0f, 15.0f/width,
+	0.0f, 15.0f/width,
+
+	0.0f, 0.0f,
+	1.0f, 0.0f,
+
+	1.0f, 1.0f/width,
+	0.0f, 1.0f/width,
+	
+
+	0.0f, 2.0f/width,
+	1.0f, 2.0f/width,
+
+	1.0f, 3.0f/width,
+	0.0f, 3.0f/width,
+
+	0.0f, 4.0f/width,
+	1.0f, 4.0f/width,
+	
+	1.0f, 5.0f/width,
+	0.0f, 5.0f/width,
+
+	0.0f, 6.0f/width,
+	1.0f, 6.0f/width,
+
+	1.0f, 7.0f/width,
+	0.0f, 7.0f/width,
+
+	0.0f, 8.0f/width,
+	1.0f, 8.0f/width,
+
+	1.0f, 9.0f/width,
+	0.0f, 9.0f/width,
+
+	0.0f, 10.0f/width,
+	1.0f, 10.0f/width,
+
+	1.0f, 11.0f/width,
+	0.0f, 11.0f/width,
+	
+	0.0f, 12.0f/width,
+	1.0f, 12.0f/width,
+
+	1.0f, 13.0f/width,
+	0.0f, 13.0f/width,
+	
+	0.0f, 14.0f/width,
+	1.0f, 14.0f/width,
+
+	1.0f, 15.0f/width,
+	0.0f, 15.0f/width,
+
+	0.0f, 0.0f,
+	1.0f, 0.0f,
+
+	1.0f, 1.0f/width,
+	0.0f, 1.0f/width,
+	
+
+	0.0f, 2.0f/width,
+	1.0f, 2.0f/width,
+
+	1.0f, 3.0f/width,
+	0.0f, 3.0f/width,
+
+	0.0f, 4.0f/width,
+	1.0f, 4.0f/width,
+	
+	1.0f, 5.0f/width,
+	0.0f, 5.0f/width,
+
+	0.0f, 6.0f/width,
+	1.0f, 6.0f/width,
+
+	1.0f, 7.0f/width,
+	0.0f, 7.0f/width,
+
+	0.0f, 8.0f/width,
+	1.0f, 8.0f/width,
+
+	1.0f, 9.0f/width,
+	0.0f, 9.0f/width,
+
+	0.0f, 10.0f/width,
+	1.0f, 10.0f/width,
+
+	1.0f, 11.0f/width,
+	0.0f, 11.0f/width,
+	
+	0.0f, 12.0f/width,
+	1.0f, 12.0f/width,
+
+	1.0f, 13.0f/width,
+	0.0f, 13.0f/width,
+	
+	0.0f, 14.0f/width,
+	1.0f, 14.0f/width,
+
+	1.0f, 15.0f/width,
+	0.0f, 15.0f/width,
+
 	0.0f, 0.0f,
 	1.0f, 0.0f,
 
@@ -1423,4 +1619,3 @@ GLfloat textureCoordinates[] = {
 	1.0f, 15.0f/width,
 	0.0f, 15.0f/width,
 };
-*/
