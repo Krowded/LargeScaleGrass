@@ -278,14 +278,7 @@ GLuint combinedIndices[] =
 	157, 159, 158,
 };
 
-
-//Texture coordinates
-//TODO
-
-
 ////////////Grass types
-
-
 GLfloat Zero[] =
 {
 	0.0f,0.0f,

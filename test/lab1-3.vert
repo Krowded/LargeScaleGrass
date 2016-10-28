@@ -14,8 +14,8 @@ out vec2 frag_texCoords;
 out vec3 frag_normal;
 out vec3 frag_viewVector;
 
-uniform vec2 vertices[160];
-uniform vec2 normals[160];
+uniform vec2 vertices[160]; //Pre-made grass shapes
+uniform vec2 normals[160]; //Pre-made normals
 uniform mat4 worldToProjection;
 uniform float time;
 
@@ -41,10 +41,10 @@ void main(void)
 	gl_Position.y = in_Position.y + 0.05*sin(time*0.05 + gl_InstanceID*0.5);
 	
 	//ModelToWorld transformations
-	gl_Position = tileTransformation * modelToWorld * gl_Position;
+	gl_Position =  tileTransformation * modelToWorld * gl_Position;
 	
 	//Wind force acting on the grass as an invisible cylinder moving across it (in the x-direction, leaving z untouched)
-	const float windCylinderRadius = 2;
+	const float windCylinderRadius = 5;
 	vec2 windCylinderPosition = vec2(5*tan(time*0.005)-2, windCylinderRadius);
 	vec2 windVector = gl_Position.xy - windCylinderPosition;
 	float windDistance = length(windVector);

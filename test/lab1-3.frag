@@ -14,9 +14,9 @@ uniform vec3 up;
 
 const float skylight = 0.8;
 const float earthlight = 0.3;
-const float diffuseConstant = 0;//0.25;
-const float specularConstant = 1;//0.2;
-const float offset = 0.25;
+const float diffuseConstant = 0.25;
+const float specularConstant = 0.2;
+const float textureOffset = 0.25;
 void main(void)
 {
 	vec3 normal = normalize(frag_normal);
@@ -49,7 +49,7 @@ void main(void)
  	out_Color = texOut * shades;
  	*/
 
- 	out_Color = texture(tex, frag_texCoords*0.25 + textureType) * shade;
+ 	out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade;
  	out_Color.rb *= frag_hue;
 	//out_Color = shade * vec4(frag_hue*texOut.r, texOut.g, frag_hue*texOut.b, texOut.w);
 }
