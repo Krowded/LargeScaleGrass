@@ -2,10 +2,10 @@
 
 //in vec2 inPosition; //Z-part always 0
 //in vec2 in_Normal; //Same here
-in float in_Thickness;
-in float in_Hue;
+layout(location = 1) in mat4 modelToWorld;
+layout(location = 5) in float in_Thickness;
+layout(location = 6) in float in_Hue;
 in vec2 in_TexCoords;
-in mat4 modelToWorld;
 in mat4 tileTransformation;
 
 flat out float textureType;

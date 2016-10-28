@@ -9,6 +9,7 @@
 #define tileSize 1.0f
 
 struct Tile {
+	vec3 position;
 	mat4 transformation;
 	GLuint offset;
 };
@@ -54,24 +55,15 @@ GLfloat globalTime = 0;
 
 //One VAO for all the grass
 GLuint grassVAO;
-GLuint tileVBO, grassTransformationBuffer, grassHueBuffer, grassThicknessBuffer;
+GLuint tileVBO, strawVBO;
 GLuint tileTransformationLocation;
-GLuint grassTransformationLocation;
-GLuint hueLocation;
-GLuint thicknessLocation;
 
 //Tiles
 const GLuint numberOfTiles = 10;
 const GLuint maxTiles = 1000;
 mat4 tileTransformations[maxTiles];
-Tile* Tiles;	
-
-
-mat4 grassTransformations[totalNumberOfStraws];
-GLfloat grassThicknesses[totalNumberOfStraws];
-GLfloat grassHues[totalNumberOfStraws];
-GLuint textureType[totalNumberOfStraws];
-
+Tile* Tiles;
+Straw Straws[totalNumberOfStraws];
 
 void generateGrass() {
 	//Procedural generation of the grass
@@ -85,11 +77,10 @@ void generateGrass() {
 		mat4 scaling = S(length, length, length);
 		mat4 rotation = Ry(angle);
 		mat4 translation = T(displacementx, 0, displacementz);
-		grassTransformations[i] = Transpose(Mult(translation, Mult(rotation, scaling)));
+		Straws[i].transformation = Transpose(Mult(translation, Mult(rotation, scaling)));
 
-
-		grassThicknesses[i] = (rand() % 1500)/10000.0f + grassMinThickness;
-		grassHues[i] = float((rand() % 1500))/1000.0f + grassMinHue;
+		Straws[i].thickness = (rand() % 1500)/10000.0f + grassMinThickness;
+		Straws[i].hue = float((rand() % 1500))/1000.0f + grassMinHue;
  	}
 
 	//Generate VAOs, VBOs
@@ -99,48 +90,40 @@ void generateGrass() {
 	glGenBuffers(1, &grassNormalBuffer);
 	glGenBuffers(1, &indexBufferObjID);
 	glGenBuffers(1, &texCoordBufferObjID);
-	glGenBuffers(1, &grassTransformationBuffer);
-	glGenBuffers(1, &grassHueBuffer);
-	glGenBuffers(1, &grassThicknessBuffer);
 	glGenBuffers(1, &tileVBO);
+	glGenBuffers(1, &strawVBO);
 
 	GLuint VAO = grassVAO;
 	glBindVertexArray(VAO);
 
 	//Set up VBOs and upload the static ones
 
-    glBindBuffer(GL_ARRAY_BUFFER, grassTransformationBuffer);
-    grassTransformationLocation = glGetAttribLocation(grassShader, "modelToWorld");
+	////Dynamic
+
+	glBindBuffer(GL_ARRAY_BUFFER, strawVBO);
+    GLuint grassTransformationLocation = glGetAttribLocation(grassShader, "modelToWorld");
     glEnableVertexAttribArray(grassTransformationLocation); 
-    glEnableVertexAttribArray(grassTransformationLocation+1); 
-    glEnableVertexAttribArray(grassTransformationLocation+2); 
+    glEnableVertexAttribArray(grassTransformationLocation+1);
+    glEnableVertexAttribArray(grassTransformationLocation+2);
     glEnableVertexAttribArray(grassTransformationLocation+3);
-    glVertexAttribPointer(grassTransformationLocation, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)0);
-    glVertexAttribPointer(grassTransformationLocation+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4)));
-    glVertexAttribPointer(grassTransformationLocation+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4)));
-    glVertexAttribPointer(grassTransformationLocation+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4)));
+    glEnableVertexAttribArray(grassTransformationLocation+4);
+    glEnableVertexAttribArray(grassTransformationLocation+5);
+    glVertexAttribPointer(grassTransformationLocation, 4, GL_FLOAT, GL_FALSE, sizeof(Straw), (GLvoid*)0);
+    glVertexAttribPointer(grassTransformationLocation+1, 4, GL_FLOAT, GL_FALSE, sizeof(Straw), (GLvoid*)(sizeof(vec4)));
+    glVertexAttribPointer(grassTransformationLocation+2, 4, GL_FLOAT, GL_FALSE, sizeof(Straw), (GLvoid*)(2 * sizeof(vec4)));
+    glVertexAttribPointer(grassTransformationLocation+3, 4, GL_FLOAT, GL_FALSE, sizeof(Straw), (GLvoid*)(3 * sizeof(vec4)));
+    glVertexAttribPointer(grassTransformationLocation+4, 1, GL_FLOAT, GL_FALSE, sizeof(Straw), (GLvoid*)(sizeof(mat4)));
+    glVertexAttribPointer(grassTransformationLocation+5, 1, GL_FLOAT, GL_FALSE, sizeof(Straw), (GLvoid*)(sizeof(mat4) + sizeof(GLfloat)));
     glVertexAttribDivisor(grassTransformationLocation, 1);
     glVertexAttribDivisor(grassTransformationLocation+1, 1);
     glVertexAttribDivisor(grassTransformationLocation+2, 1);
     glVertexAttribDivisor(grassTransformationLocation+3, 1);
+    glVertexAttribDivisor(grassTransformationLocation+4, 1);
+    glVertexAttribDivisor(grassTransformationLocation+5, 1);
 
-    printError("upload modelToWorld matrices");
+    printError("dynamic vbo setup");
 
-    glBindBuffer(GL_ARRAY_BUFFER, grassHueBuffer);
-    hueLocation = glGetAttribLocation(grassShader, "in_Hue");
-    glEnableVertexAttribArray(hueLocation);
-    glVertexAttribPointer(hueLocation, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
-    glVertexAttribDivisor(hueLocation, 1);
-
-    printError("upload hues");
-
-	glBindBuffer(GL_ARRAY_BUFFER, grassThicknessBuffer);
-	thicknessLocation = glGetAttribLocation(grassShader, "in_Thickness");
-	glVertexAttribPointer(thicknessLocation, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
-    glVertexAttribDivisor(thicknessLocation, 1);
-    glEnableVertexAttribArray(thicknessLocation);
-
-    printError("upload thickness");
+    ////Static
 
 	//Upload indices
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferObjID);
@@ -184,6 +167,7 @@ void generateTiles() {
 	Tiles = (Tile*)malloc(numberOfTiles*sizeof(Tile)); //TODO: Free somewhere
 	for(int i = 0; i < numberOfTiles; ++i)
 	{	
+		Tiles[i].position = SetVector(tilePositions[i*3], tilePositions[i*3+1], tilePositions[i*3+2]);
 		Tiles[i].transformation = Transpose(T( tilePositions[i*3], tilePositions[i*3+1], tilePositions[i*3+2]));
 		Tiles[i].offset = rand() % (totalNumberOfStraws - maxGrassPerTile);
 	}
@@ -275,6 +259,7 @@ void display(void)
 	GLuint levelOfDetail[] = { maxGrassPerTile };
 	GLuint strawCount = 0;
 	GLuint offsets[numberOfTiles];
+	GLuint numberOfTilesToProcess = 0;
 	//Sort by distance for every level of detail
 	for(int i = 0; i < totalLevelsOfDetail; ++i) {
 
@@ -285,10 +270,11 @@ void display(void)
 
 		GLuint strawsPerTile = levelOfDetail[i];
 		GLuint totalInstances = numberOfTiles*strawsPerTile;
-		//if(numberOfTiles < 1)
-		//	continue; 
+		
+		if(numberOfTiles < 1)
+			continue; 
 
-		//Tile
+		//Tile (anyway to skip this step?)
 		glBindBuffer(GL_ARRAY_BUFFER, tileVBO);
 		glBufferData(GL_ARRAY_BUFFER, numberOfTiles * sizeof(mat4), tileTransformations, GL_STATIC_DRAW);
 		glVertexAttribDivisor(tileTransformationLocation, strawsPerTile);
@@ -296,30 +282,18 @@ void display(void)
 		glVertexAttribDivisor(tileTransformationLocation+2, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+3, strawsPerTile);
 		
-
 		//Grass Transformations
-		glBindBuffer(GL_ARRAY_BUFFER, grassTransformationBuffer);
-		glBufferData(GL_ARRAY_BUFFER, totalInstances * sizeof(mat4), NULL, GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, strawVBO);
+		glBufferData(GL_ARRAY_BUFFER, totalInstances * sizeof(Straw), NULL, GL_STATIC_DRAW);
 		for(int j = 0; j < numberOfTiles; ++j) 
-			glBufferSubData(GL_ARRAY_BUFFER, j*strawsPerTile*sizeof(mat4), strawsPerTile * sizeof(mat4), &grassTransformations[offsets[j]]);
-
-	    //Hues
-	    glBindBuffer(GL_ARRAY_BUFFER, grassHueBuffer);
-		glBufferData(GL_ARRAY_BUFFER, totalInstances * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
-		for(int j = 0; j < numberOfTiles; ++j) 
-			glBufferSubData(GL_ARRAY_BUFFER, j*strawsPerTile * sizeof(GLfloat), strawsPerTile * sizeof(GLfloat), &grassHues[offsets[j]]);
-
-
-	    //Thicknesses
-		glBindBuffer(GL_ARRAY_BUFFER, grassThicknessBuffer);
-		glBufferData(GL_ARRAY_BUFFER, totalInstances * sizeof(GLfloat), NULL, GL_STATIC_DRAW);
-		for(int j = 0; j < numberOfTiles; ++j) 
-			glBufferSubData(GL_ARRAY_BUFFER, j*strawsPerTile * sizeof(GLfloat), strawsPerTile * sizeof(GLfloat), &grassThicknesses[offsets[j]]);
+			glBufferSubData(GL_ARRAY_BUFFER, j*strawsPerTile*sizeof(Straw), strawsPerTile * sizeof(Straw), &Straws[offsets[j]]);
 
 		//Draw all the straws at this LOD
 	    glDrawElementsInstancedBaseInstance( GL_TRIANGLES, numOfIndices, GL_UNSIGNED_INT, 0L, totalInstances, 0);
 	    strawCount += totalInstances;
 	}
+
+	//FPS
 	if(int(globalTime) % 1000 < 1)
 		std::cout << "Drawing " << strawCount  << " straws" << std::endl;
 
