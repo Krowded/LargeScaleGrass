@@ -42,7 +42,7 @@ GLfloat tilePositions[] = {
 };
 
 const GLfloat baseSizeModifier = 1;
-const GLint maxGrassPerTile = 5000;
+const GLint maxGrassPerTile = 10000;
 const GLint totalNumberOfStraws = 160000;
 const GLfloat grassMinSize = 0.01;
 const GLfloat grassMaxSize = 0.05;
@@ -121,7 +121,20 @@ void generateGrass() {
     glVertexAttribDivisor(grassTransformationLocation+4, 1);
     glVertexAttribDivisor(grassTransformationLocation+5, 1);
 
-    printError("dynamic vbo setup");
+    printError("dynamic grasstranformation setup");
+
+	glBindBuffer(GL_ARRAY_BUFFER, tileVBO);
+	tileTransformationLocation = glGetAttribLocation(grassShader, "tileTransformation");
+	glEnableVertexAttribArray(tileTransformationLocation); 
+	glEnableVertexAttribArray(tileTransformationLocation+1); 
+	glEnableVertexAttribArray(tileTransformationLocation+2);
+	glEnableVertexAttribArray(tileTransformationLocation+3);
+	glVertexAttribPointer(tileTransformationLocation, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)0);
+    glVertexAttribPointer(tileTransformationLocation+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4)));
+    glVertexAttribPointer(tileTransformationLocation+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4)));
+    glVertexAttribPointer(tileTransformationLocation+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4))); 
+
+	printError("dynamic tiletransformations setup");
 
     ////Static
 
@@ -146,19 +159,6 @@ void generateGrass() {
 	glUniform2fv(glGetUniformLocation(grassShader, "normals"), 5*vertNum, combinedNormals);
 
 	printError("upload normal");
-
-	glBindBuffer(GL_ARRAY_BUFFER, tileVBO);
-	tileTransformationLocation = glGetAttribLocation(grassShader, "tileTransformation");
-	glEnableVertexAttribArray(tileTransformationLocation); 
-	glEnableVertexAttribArray(tileTransformationLocation+1); 
-	glEnableVertexAttribArray(tileTransformationLocation+2);
-	glEnableVertexAttribArray(tileTransformationLocation+3);
-	glVertexAttribPointer(tileTransformationLocation, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)0);
-    glVertexAttribPointer(tileTransformationLocation+1, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(sizeof(vec4)));
-    glVertexAttribPointer(tileTransformationLocation+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4)));
-    glVertexAttribPointer(tileTransformationLocation+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4))); 
-
-	printError("enabling tileTransformations");
 
     glBindVertexArray(0);
 }	
@@ -255,20 +255,20 @@ void display(void)
 	glDisable(GL_CULL_FACE); //Both sides need to be visible
 	glBindVertexArray(grassVAO);
 	//Set tileTransformation vertex attribute array
-	GLuint totalLevelsOfDetail = 1;
-	GLuint levelOfDetail[] = { maxGrassPerTile };
+	const GLuint totalLevelsOfDetail = 1;
+	const GLuint levelsOfDetail[] = { maxGrassPerTile };
 	GLuint strawCount = 0;
 	GLuint offsets[numberOfTiles];
 	GLuint numberOfTilesToProcess = 0;
 	//Sort by distance for every level of detail
 	for(int i = 0; i < totalLevelsOfDetail; ++i) {
 
-		for(int j = 0; j < numberOfTiles; ++j) { //TODO: Check distance and sort
+		for(int j = 0; j < numberOfTiles; ++j) { //TODO: Frustumculling, distance sorting
 			tileTransformations[j] = Tiles[j].transformation;
 			offsets[j] = Tiles[j].offset;
 		}
 
-		GLuint strawsPerTile = levelOfDetail[i];
+		GLuint strawsPerTile = levelsOfDetail[i];
 		GLuint totalInstances = numberOfTiles*strawsPerTile;
 		
 		if(numberOfTiles < 1)
@@ -276,7 +276,7 @@ void display(void)
 
 		//Tile (anyway to skip this step?)
 		glBindBuffer(GL_ARRAY_BUFFER, tileVBO);
-		glBufferData(GL_ARRAY_BUFFER, numberOfTiles * sizeof(mat4), tileTransformations, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numberOfTiles * sizeof(mat4), tileTransformations, GL_STREAM_DRAW);
 		glVertexAttribDivisor(tileTransformationLocation, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+1, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+2, strawsPerTile);
@@ -284,7 +284,7 @@ void display(void)
 		
 		//Grass Transformations
 		glBindBuffer(GL_ARRAY_BUFFER, strawVBO);
-		glBufferData(GL_ARRAY_BUFFER, totalInstances * sizeof(Straw), NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, totalInstances * sizeof(Straw), NULL, GL_STREAM_DRAW);
 		for(int j = 0; j < numberOfTiles; ++j) 
 			glBufferSubData(GL_ARRAY_BUFFER, j*strawsPerTile*sizeof(Straw), strawsPerTile * sizeof(Straw), &Straws[offsets[j]]);
 
@@ -345,7 +345,7 @@ void OnTimer(int value)
 		fps = 0;
 	}
 
-	glutTimerFunc(20, &OnTimer, value);
+	glutTimerFunc(1, &OnTimer, value);
 }
 
 int main(int argc, char *argv[])
