@@ -207,12 +207,12 @@ void InitGrass(mat4 projection, GLuint tileAmount, vec3* tilePositions, vec3* ti
 	printError("GL inits");
 
 	// Load and compile shader
-	grassProgram = loadShaders("grassShader.vert", "grassShader.frag");
+	grassProgram = loadShaders("shaders/grassShader.vert", "shaders/grassShader.frag");
 	printError("init grass shader");
 	
 	//Upload textures
 	glUniform1i(glGetUniformLocation(grassProgram, "tex"), 0); // Texture unit 0
-	LoadTGATextureSimple((char*)"texture.tga", &grassTexture);
+	LoadTGATextureSimple((char*)"textures/texture.tga", &grassTexture);
 	glBindTexture(GL_TEXTURE_2D, grassTexture);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);

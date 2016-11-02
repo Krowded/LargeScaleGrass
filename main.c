@@ -159,21 +159,21 @@ void init(void)
 	camMatrix = camBaseMatrix;
 
 	// Load and compile shader
-	terrainProgram = loadShaders((char*)"terrain2.vert", (char*)"terrain2.frag");
-	modelProgram = loadShaders((char*)"models.vert", (char*)"models.frag");
+	terrainProgram = loadShaders((char*)"shaders/terrain.vert", (char*)"shaders/terrain.frag");
+	modelProgram = loadShaders((char*)"shaders/models.vert", (char*)"shaders/models.frag");
 
 	glUseProgram(terrainProgram);
 	printError("init shader");
 	
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(terrainProgram, "tex"), 0); // Texture unit 0
-	LoadTGATextureSimple((char*)"grass_texture237.tga", &tex1);
+	LoadTGATextureSimple((char*)"textures/grass_texture237.tga", &tex1);
 
 	glUseProgram(modelProgram);
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 
-// Load terrain data
-		LoadTGATextureData((char*)"fft-terrain.tga", &ttex);
+	// Load terrain data
+	LoadTGATextureData((char*)"textures/fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	printError("init terrain");
 
@@ -184,7 +184,7 @@ void init(void)
 
 
 // Load models
-	m = LoadModelPlus((char*)"groundsphere.obj");
+	m = LoadModelPlus((char*)"models/groundsphere.obj");
 }
 
 

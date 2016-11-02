@@ -99,7 +99,7 @@ GLfloat skyboxBackTexCoords[] = {
 
 void InitSkybox(mat4 projectionMatrix)
 {
-    skyboxProgram = loadShaders((char*)"../shaders/skybox.vert", (char*)"../shaders/skybox.frag");
+    skyboxProgram = loadShaders((char*)"shaders/skybox.vert", (char*)"shaders/skybox.frag");
 
     glUseProgram(skyboxProgram);
     glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "ViewToProjection"), 1, GL_TRUE, projectionMatrix.m);
@@ -161,12 +161,12 @@ void InitSkybox(mat4 projectionMatrix)
 
 
 
-    LoadTGATextureSimple((char*)"../textures/skyrender0003.tga", &skyboxTopTexture);
-    LoadTGATextureSimple((char*)"../textures/skyrender0006.tga", &skyboxBottomTexture);
-    LoadTGATextureSimple((char*)"../textures/skyrender0004.tga", &skyboxLeftTexture);
-    LoadTGATextureSimple((char*)"../textures/skyrender0001.tga", &skyboxRightTexture);
-    LoadTGATextureSimple((char*)"../textures/skyrender0005.tga", &skyboxFrontTexture);
-    LoadTGATextureSimple((char*)"../textures/skyrender0002.tga", &skyboxBackTexture);
+    LoadTGATextureSimple((char*)"textures/skyrender0003.tga", &skyboxTopTexture);
+    LoadTGATextureSimple((char*)"textures/skyrender0006.tga", &skyboxBottomTexture);
+    LoadTGATextureSimple((char*)"textures/skyrender0004.tga", &skyboxLeftTexture);
+    LoadTGATextureSimple((char*)"textures/skyrender0001.tga", &skyboxRightTexture);
+    LoadTGATextureSimple((char*)"textures/skyrender0005.tga", &skyboxFrontTexture);
+    LoadTGATextureSimple((char*)"textures/skyrender0002.tga", &skyboxBackTexture);
 
     glBindTexture(GL_TEXTURE_2D, skyboxTopTexture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
