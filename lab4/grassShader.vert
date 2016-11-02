@@ -19,7 +19,7 @@ uniform vec2 normals[160]; //Pre-made normals
 uniform mat4 worldToProjection;
 uniform float time;
 
-//uniform float globalLength //Can be used to simulate grass growing as well as give external control. Good for demo
+//uniform mat4 globalLength //Can be used to simulate grass growing as well as give external control. Good for demo
 //uniform float globalThickness //Ditto
 //uniform float windSize
 
@@ -31,7 +31,7 @@ void main(void)
 
 
 	//Thickness tapers off towards top to make a pointy blade of grass
-	//float thickness = (16-(gl_VertexID*0.5))*(1/16)*in_Thickness;
+	//float thickness = (16-(gl_VertexID*0.5))*(1/16)*in_Thickness; //What it does
 	float thickness = in_Thickness-(gl_VertexID*0.03125)*in_Thickness; //Optimized
 
 	//Half the vertices expand towards z, other half towards -z
@@ -44,11 +44,17 @@ void main(void)
 	gl_Position =  tileTransformation * modelToWorld * gl_Position;
 	
 	//Wind force acting on the grass as an invisible cylinder moving across it (in the x-direction, leaving z untouched)
-	const float windCylinderRadius = 10;
-	vec2 windCylinderPosition = vec2(5*tan(time*0.005)-2, windCylinderRadius);
+	const float windCylinderRadius = 5;
+	vec2 windCylinderPosition = vec2(500*tan(time*0.0005)-2, windCylinderRadius); //- inverse(world)[3][2]);
+
+	//Waterfall
+//	vec4 windCylinderPosition1 = vec4(5*tan(time*0.005)-2, windCylinderRadius, 0,1);
+//	vec2 windCylinderPosition = vec2(tileTransformation * windCylinderPosition1);
+	
+//Wind cont;
 	vec2 windVector = gl_Position.xy - windCylinderPosition;
 	float windDistance = length(windVector);
-	float force = max(0, windCylinderRadius - windDistance);
+	float force = 0;// max(0, windCylinderRadius - windDistance); //Commented out cause nothing's working atm
 	vec2 forceVector = vec2(pow(force,2), pow(force,5));
 	gl_Position.xy += windVector.xy * forceVector.xy;
 
@@ -56,7 +62,7 @@ void main(void)
 	gl_Position = worldToProjection * gl_Position;	
 
 	//Pass along stuff to fragment shader
-	textureType = mod(gl_InstanceID,4)*0.25;
+	textureType = mod(gl_InstanceID,2)*0.25;
 	frag_viewVector = -vec3(tileTransformation * modelToWorld * vec4(in_Position, 0, 1.0)); // For specular
 	frag_hue = in_Hue;
 	frag_texCoords = in_TexCoords;
