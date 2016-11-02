@@ -7,6 +7,7 @@ layout(location = 6) in float in_Hue;
 //layout(location = 9) in vec2 in_Normal;
 in vec2 in_TexCoords;
 in mat4 tileTransformation;
+in float tileHeight;
 
 flat out float textureType;
 flat out float frag_hue;
@@ -45,16 +46,10 @@ void main(void)
 	
 	//Wind force acting on the grass as an invisible cylinder moving across it (in the x-direction, leaving z untouched)
 	const float windCylinderRadius = 5;
-	vec2 windCylinderPosition = vec2(500*tan(time*0.0005)-2, windCylinderRadius); //- inverse(world)[3][2]);
-
-	//Waterfall
-//	vec4 windCylinderPosition1 = vec4(5*tan(time*0.005)-2, windCylinderRadius, 0,1);
-//	vec2 windCylinderPosition = vec2(tileTransformation * windCylinderPosition1);
-	
-//Wind cont;
+	vec2 windCylinderPosition = vec2(50*tan(time*0.05)-2, windCylinderRadius + tileHeight);
 	vec2 windVector = gl_Position.xy - windCylinderPosition;
 	float windDistance = length(windVector);
-	float force = 0;// max(0, windCylinderRadius - windDistance); //Commented out cause nothing's working atm
+	float force = max(0, windCylinderRadius - windDistance);
 	vec2 forceVector = vec2(pow(force,2), pow(force,5));
 	gl_Position.xy += windVector.xy * forceVector.xy;
 

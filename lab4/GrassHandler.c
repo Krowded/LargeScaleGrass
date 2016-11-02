@@ -28,7 +28,8 @@ struct Straw {
 const GLfloat baseSizeModifier = 5;
 const GLint maxGrassPerTile = 1000;
 const GLuint totalLevelsOfDetail = 3;
-const GLuint levelsOfDetail[] = { 100, 100, 0 };
+const GLuint levelsOfDetail[] = { 500, 100, 50 };
+const GLfloat sortingDistances[] = { 20.0f, 50.0f, 100.0f };
 const GLint totalNumberOfStraws = 160000;
 const GLfloat grassMinSize = 0.01;
 const GLfloat grassMaxSize = 0.05;
@@ -38,6 +39,7 @@ const GLfloat grassMinHue = 0.0;
 //Array of arrays to upload
 mat4* tileTransformations[totalLevelsOfDetail];
 GLuint* offsets[totalLevelsOfDetail];
+GLfloat* tileHeights[totalLevelsOfDetail];
 
 
 GLuint grassProgram;
@@ -46,8 +48,8 @@ GLfloat globalTime = 0;
 
 //One VAO for all the grass
 GLuint grassVAO;
-GLuint tileVBO, strawVBO;
-GLuint tileTransformationLocation;
+GLuint tileVBO, strawVBO, tileHeightBuffer;
+GLuint tileTransformationLocation, tileHeightLocation;
 
 //Tiles
 LOCAL GLuint totalNumberOfTiles;
@@ -82,6 +84,7 @@ void GenerateGrass() {
 	glGenBuffers(1, &texCoordBufferObjID);
 	glGenBuffers(1, &tileVBO);
 	glGenBuffers(1, &strawVBO);
+	glGenBuffers(1, &tileHeightBuffer);
 
 	GLuint VAO = grassVAO;
 	glBindVertexArray(VAO);
@@ -124,7 +127,12 @@ void GenerateGrass() {
     glVertexAttribPointer(tileTransformationLocation+2, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(2 * sizeof(vec4)));
     glVertexAttribPointer(tileTransformationLocation+3, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (GLvoid*)(3 * sizeof(vec4))); 
 
-	printError("dynamic tiletransformations setup");
+    glBindBuffer(GL_ARRAY_BUFFER, tileHeightBuffer);
+    tileHeightLocation = glGetAttribLocation(grassProgram, "tileHeight");
+    glEnableVertexAttribArray(tileHeightLocation);
+    glVertexAttribPointer(tileHeightLocation, 1, GL_FLOAT, GL_FALSE, sizeof(GLfloat), 0);
+
+	printError("dynamic tile transformations setup");
 
     ////Static
 
@@ -161,8 +169,8 @@ void GenerateTiles(vec3* tilePositions, vec3* tileNormals)
 	{	
 		Tiles[i].offset = rand() % (totalNumberOfStraws - maxGrassPerTile);
 
-		//Tiles[i].position = SetVector(tilePositions[i].x, tilePositions[i].y, tilePositions[i].z);
-		Tiles[i].position = SetVector(tilePositions[i].x, 0.0f, tilePositions[i].z); //Not interested in height
+		Tiles[i].position = SetVector(tilePositions[i].x, tilePositions[i].y, tilePositions[i].z);
+		//Tiles[i].position = SetVector(tilePositions[i].x, 0.0f, tilePositions[i].z); //Not interested in height
 
 		//Rotate to match normal	
 		vec3 rotationAxis = Normalize(CrossProduct(upVector, tileNormals[i]));
@@ -173,7 +181,7 @@ void GenerateTiles(vec3* tilePositions, vec3* tileNormals)
 		//rotationAxis = SetVector(1,0,0);
 		GLfloat diffAngle = acos( DotProduct(upVector, tileNormals[i]));
 		mat4 rotation = ArbRotate(rotationAxis, diffAngle);
-		mat4 translation = T(tilePositions[i].x, tilePositions[i].y, tilePositions[i].z);
+		mat4 translation = T(tilePositions[i].x, tilePositions[i].y+0.1, tilePositions[i].z);
 		Tiles[i].transformation = Transpose(Mult(translation, rotation));
 	}
     printError("generate tiles");
@@ -183,14 +191,12 @@ void GenerateTiles(vec3* tilePositions, vec3* tileNormals)
 static mat4 projectionMatrix;
 void InitGrass(mat4 projection, GLuint tileAmount, vec3* tilePositions, vec3* tileNormals)
 {
-	dumpInfo();
-
-	//projectionMatrix = perspective(90, 640/480, 0.2, 10000);//windowWidth/windowHeight, nearDrawDistance, drawDistance);
 	projectionMatrix = projection;
 	totalNumberOfTiles = tileAmount;
 	for(GLuint i = 0; i < totalLevelsOfDetail; ++i) {
 		tileTransformations[i] = (mat4*)malloc(totalNumberOfTiles*sizeof(mat4));
 		offsets[i] = (GLuint*)malloc(totalNumberOfTiles*sizeof(GLuint));
+		tileHeights[i] = (GLfloat*)malloc(totalNumberOfTiles*sizeof(GLfloat));
 	}
 
 
@@ -228,7 +234,7 @@ void InitGrass(mat4 projection, GLuint tileAmount, vec3* tilePositions, vec3* ti
 GLfloat xview = 0.0f;
 GLfloat yview = 0.0f;
 GLfloat xangle = 0.0f;
-void DrawGrass(GLuint globalTime, mat4 worldMatrix)
+void DrawGrass(GLuint globalTime, mat4 worldMatrix, vec3 lightVector)
 {
 	glUseProgram(grassProgram);
 	glBindVertexArray(grassVAO);
@@ -242,33 +248,44 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix)
 	//Light vectors
 	vec3 upVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(0,1, -1));
 	glUniform3fv(glGetUniformLocation(grassProgram, "up"), 1, &upVector.x);
-	vec3 lightVector = MultMat3Vec3(mat4tomat3(worldMatrix), SetVector(1,1,0));
+	//lightVector = MultMat3Vec3(mat4tomat3(worldMatrix), lightVector;
 	glUniform3fv(glGetUniformLocation(grassProgram, "light"), 1, &lightVector.x);
 
 
 	//Set tileTransformation vertex attribute array	
 	GLuint strawCount = 0;
-	//GLuint offsets[totalLevelsOfDetail][totalNumberOfTiles];
 	GLuint tilesToProcess[totalLevelsOfDetail] = {0};
-	//mat4 tileTransformations[totalLevelsOfDetail][totalNumberOfTiles];
 
 	mat4 inverseWorld = InvertMat4(worldMatrix);
-	vec3 cameraPosition = SetVector((inverseWorld.m)[3], 0.0f, (inverseWorld.m)[11]);
-	for(GLuint i = 0; i < totalNumberOfTiles; ++i) { //TODO: Frustumculling, distance sorting
-		
-		GLfloat distanceToTile = Norm(VectorSub(cameraPosition, Tiles[i].position));
+	vec3 cameraPosition = SetVector((inverseWorld.m)[3], (inverseWorld.m)[7], (inverseWorld.m)[11]);
+	vec3 cameraForward = Normalize(SetVector( (inverseWorld.m)[2], (inverseWorld.m)[6], (inverseWorld.m)[10]));
+
+	for(GLuint i = 0; i < totalNumberOfTiles; ++i) {
+		//Frustum culling
+		vec3 normalizedVectorToTile = Normalize(VectorSub(cameraPosition, Tiles[i].position));
+		GLfloat diffAngle = acos( DotProduct(cameraForward, normalizedVectorToTile));
+		if(diffAngle > M_PI/4)
+			continue;
+
+		//Distance sorting
+		GLfloat distanceToTile = Norm(VectorSub(vec3(cameraPosition.x, 0, cameraPosition.z), vec3(Tiles[i].position.x, 0, Tiles[i].position.z)));
 
 		GLuint level;
-		if(distanceToTile < 20.0f)
+		for(GLuint j = 0; j < totalLevelsOfDetail; ++j)
 		{
-			level = 0;
-		} else if (distanceToTile < 40.0f) {
-			level = 1;
-		} else {
-			level = 2;
+			if(distanceToTile < sortingDistances[j])
+			{
+				level = j;
+				break;
+			}
+			level = totalLevelsOfDetail; //Set to max if not in a level
 		}
-		
 
+		if(level == totalLevelsOfDetail)		
+			continue;
+
+		//Fill arrays and increment
+		tileHeights[level][tilesToProcess[level]] = Tiles[i].position.y;
 		tileTransformations[level][tilesToProcess[level]] = Tiles[i].transformation;
 		offsets[level][tilesToProcess[level]] = Tiles[i].offset;
 		tilesToProcess[level]++;
@@ -291,12 +308,11 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix)
 		glVertexAttribDivisor(tileTransformationLocation+1, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+2, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+3, strawsPerTile);
-
-/*		//Needed for wind?
-		glBindBuffer(GL_ARRAY_BUFFER, tileHeightBO);
-		glBufferData(GL_ARRAY_BUFFER, totalNumberOfTiles * sizeof(GLfloat), tileHeights, GL_STREAM_DRAW);
-		glVertexAttribDivisor(tileTransformationLocation, strawsPerTile);
-*/
+		
+		//Needed for wind
+		glBindBuffer(GL_ARRAY_BUFFER, tileHeightBuffer);
+		glBufferData(GL_ARRAY_BUFFER, numOfTilesToDraw * sizeof(GLfloat), tileHeights[i], GL_STREAM_DRAW);
+		glVertexAttribDivisor(tileHeightLocation, strawsPerTile);
 		
 		//Grass Transformations
 		glBindBuffer(GL_ARRAY_BUFFER, strawVBO);
@@ -310,14 +326,19 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix)
 	}
 
 	//FPS
-	if(int(globalTime) % 1000 < 1)
+	static int frameCounter = 0;
+	frameCounter++;
+	if(frameCounter > 120) { 
 		std::cout << "Drawing " << strawCount  << " straws" << std::endl;
+		frameCounter = 0;
+	}
 }
 
-void Destructor() {
+void GrassDestructor() {
 	free(Tiles);
 	for(GLuint i = 0; i < totalLevelsOfDetail; ++i) {
 		free(tileTransformations[i]);
 		free(offsets[i]);
+		free(tileHeights[i]);
 	}
 }

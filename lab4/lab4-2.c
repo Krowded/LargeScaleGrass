@@ -15,6 +15,10 @@
 #include "GrassHandler.h"
 #include <iostream>
 
+bool isGravityOn = true;
+const GLfloat standardDistanceFromGround = 6;
+
+
 GLfloat windowWidth;
 GLfloat windowHeight;
 GLint drawDistance;
@@ -56,8 +60,8 @@ Model* GenerateTerrain(TextureData *tex)
 			vertexArray[(x + z * tex->width)*3 + 1] = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 10.0;
 			vertexArray[(x + z * tex->width)*3 + 2] = z / 1.0;
 // Texture coordinates. You may want to scale them.
-			texCoordArray[(x + z * tex->width)*2 + 0] = x;//(float)x / tex->width;
-			texCoordArray[(x + z * tex->width)*2 + 1] = z;//(float)z / tex->height;
+			texCoordArray[(x + z * tex->width)*2 + 0] = (GLfloat)x/4.0f;//(float)x / tex->width;
+			texCoordArray[(x + z * tex->width)*2 + 1] = (GLfloat)z/4.0f;//(float)z / tex->height;
 		}
 	for (x = 0; x < tex->width-1; x++)
 		for (z = 0; z < tex->height-1; z++)
@@ -137,9 +141,12 @@ TextureData ttex; // terrain
 
 void init(void)
 {
+	dumpInfo();
+	
 	// GL inits
 	glClearColor(0.2,0.2,0.5,0);
 	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
 	printError("GL inits");
 
 	vec3 cam = {0, 0, 0};
@@ -160,7 +167,7 @@ void init(void)
 	
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(terrainProgram, "tex"), 0); // Texture unit 0
-	LoadTGATextureSimple((char*)"maskros512.tga", &tex1);
+	LoadTGATextureSimple((char*)"grass_texture237.tga", &tex1);
 
 	glUseProgram(modelProgram);
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
@@ -180,6 +187,8 @@ void init(void)
 	m = LoadModelPlus((char*)"groundsphere.obj");
 }
 
+
+vec3 lightVector = {1, 1, 0};
 void display(void)
 {
 	static int t = 0;
@@ -191,25 +200,24 @@ void display(void)
 
 	mat4 total, modelView;	
 
+	vec3 rotatedLightVector = MultMat3Vec3(mat4tomat3(camMatrix),lightVector);
+
 	//skybox
-	glDisable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	DrawSkybox(camMatrix);
 	glEnable(GL_DEPTH_TEST);
 
 	printError("display skybox");
 
-
 	//Draw grass
-	//glDisable(GL_CULL_FACE);
-	DrawGrass(t, camMatrix);
-	glEnable(GL_CULL_FACE);
+	DrawGrass(t, camMatrix, lightVector);
 
 	printError("display grass");
 
 	//Draw terrain
 	glUseProgram(terrainProgram);
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "mdlMatrix"), 1, GL_TRUE, camMatrix.m);
+	glUniform3fv(glGetUniformLocation(terrainProgram, "lightVector"), 1, &rotatedLightVector.x);
 	
 	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
 	DrawModel(tm, terrainProgram, (char*)"inPosition", (char*)"inNormal", (char*)"inTexCoord");
@@ -362,15 +370,19 @@ void CameraControl(int t)
 	if (glutKeyIsDown('e'))
 		camBaseMatrix = Mult( T( 0, -1, 0), camBaseMatrix);
 
-	
-	//Adjust height to map
+	if(glutKeyIsDown(' '))
+		isGravityOn = !isGravityOn;
 
-	vec3 currentPosition = SetVector(-(camBaseMatrix.m)[3], -(camBaseMatrix.m)[7], -(camBaseMatrix.m)[11]);
-	float height = -TerrainHeight(currentPosition) - 5;
-	if (height < 95)
+	//Adjust height to map
+	if(isGravityOn)
 	{
-		float heightDifference = (camBaseMatrix.m)[7] - height;
-		(camBaseMatrix.m)[7] = (camBaseMatrix.m)[7] - heightDifference;
+		vec3 currentPosition = SetVector(-(camBaseMatrix.m)[3], -(camBaseMatrix.m)[7], -(camBaseMatrix.m)[11]);
+		float height = -TerrainHeight(currentPosition) - standardDistanceFromGround;
+		if (height < 95)
+		{
+			float heightDifference = (camBaseMatrix.m)[7] - height;
+			(camBaseMatrix.m)[7] = (camBaseMatrix.m)[7] - heightDifference;
+		}
 	}
 
 	//Pass it off to update camMatrix
@@ -392,5 +404,7 @@ int main(int argc, char **argv)
 	glutPassiveMotionFunc(CameraMouseUpdate);
 
 	glutMainLoop();
+
+	atexit(GrassDestructor);
 	exit(0);
 }
