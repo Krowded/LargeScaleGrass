@@ -26,9 +26,9 @@ struct Straw {
 };
 
 const GLfloat baseSizeModifier = 5;
-const GLint maxGrassPerTile = 1000;
+const GLint maxGrassPerTile = 3000;
 const GLuint totalLevelsOfDetail = 3;
-const GLuint levelsOfDetail[] = { 500, 100, 50 };
+const GLuint levelsOfDetail[] = { 1000, 100, 50 };
 const GLfloat sortingDistances[] = { 20.0f, 50.0f, 100.0f };
 const GLint totalNumberOfStraws = 160000;
 const GLfloat grassMinSize = 0.01;
@@ -58,7 +58,7 @@ Straw Straws[totalNumberOfStraws];
 
 void GenerateGrass() {
 	//Procedural generation of the grass
-	srand(0);
+	srand(0); //Constant seed means it will look the same every time
 	for(int i = 0; i < totalNumberOfStraws; ++i) {
 		GLfloat length = (float(rand() % 1000*grassMaxSize)/1000.0f + grassMinSize) * baseSizeModifier;
 		GLfloat angle = M_PI * float(rand() % 1000)/500.0f;

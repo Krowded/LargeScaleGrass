@@ -101,7 +101,7 @@ Model* GenerateTerrain(TextureData *tex)
 	
 	//Generate normals on the tiles
 	numberOfTiles = (tex->width - 1) * (tex->height - 1);
-	tileNormalsArray = (vec3*)malloc(sizeof(vec3)*numberOfTiles);
+	tileNormalsArray = (vec3*)malloc(sizeof(vec3)*numberOfTiles); //Need to free after use
 	for (x = 0; x < tex->width-1; x++)
 		for (z = 0; z < tex->height-1; z++)
 		{
@@ -181,6 +181,7 @@ void init(void)
 	GLuint numberOfTiles = (ttex.width-1)*(ttex.height-1);
 	//GLuint numberOfTiles = 10000;
 	InitGrass(projectionMatrix, numberOfTiles, (vec3*)(tm->vertexArray), tileNormalsArray);
+	free(tileNormalsArray); //Not using it anymore
 
 
 // Load models
@@ -191,7 +192,7 @@ void init(void)
 vec3 lightVector = {1, 1, 0};
 void display(void)
 {
-	static int t = 0;
+	static GLint t = 0;
 	++t;
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -228,8 +229,7 @@ void display(void)
 	//Draw models
 	glUseProgram(modelProgram);
 
-	modelView = IdentityMatrix();
-	modelView = Mult( T(25*t*0.001, 0, 25*t*0.001), modelView);
+	modelView =T(25*t*0.001, 0, 25*t*0.001);
 	
 	static float lastHeight = 0;
 	vec3 currentPosition = SetVector((modelView.m)[3], (modelView.m)[7], (modelView.m)[11]); 
@@ -238,8 +238,6 @@ void display(void)
 	float heightDifference = height - lastHeight;
 	(modelView.m)[7] = lastHeight + heightDifference;
 	lastHeight = (modelView.m)[7];
-
-	
 
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "mdlMatrix"), 1, GL_TRUE, total.m);
@@ -252,17 +250,17 @@ void display(void)
 
 void CameraControl(int);
 
-void timer(int t)
+void timer(int time)
 {
-	CameraControl(t);
+	CameraControl(time);
 	glutPostRedisplay();
 
 	static GLfloat lastTick = 0;
 	static GLint fps = 0;
 	fps++;
-	if(t - lastTick > 1000) {
+	if(time - lastTick > 1000) {
 		printf("FPS: %d\n", fps);
-		lastTick = t;
+		lastTick = time;
 		fps = 0;
 	}
 
@@ -341,10 +339,10 @@ float TerrainHeight(vec3 currentPosition)
 }
 
 int tlast = 0;
-void CameraControl(int t)
+void CameraControl(int time)
 {
-	int passedTime = t - tlast;
-	tlast = t;	
+	int passedTime = time - tlast;
+	tlast = time;	
 	GLfloat averageSpeed = 0.02;
 	GLfloat speed = (GLfloat)passedTime * averageSpeed;
 
@@ -389,6 +387,7 @@ void CameraControl(int t)
 	CameraMouseUpdate(0,0);
 }
 
+void Destructor() {}
 
 int main(int argc, char **argv)
 {

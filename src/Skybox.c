@@ -5,7 +5,9 @@
 #include "GL_utilities.h"
 
 Model *skyTop, *skyBottom, *skyLeft, *skyRight, *skyFront, *skyBack;
+Model *skyboxModel;
 GLuint skyboxTopTexture, skyboxBottomTexture, skyboxLeftTexture, skyboxRightTexture, skyboxFrontTexture, skyboxBackTexture;
+GLuint skyboxTexture;
 GLuint skyboxProgram;
 
 GLfloat skyboxTopVertices[] = {
@@ -97,13 +99,114 @@ GLfloat skyboxBackTexCoords[] = {
     1, 0,
     0, 1 };
 
+
+//Combined versions below:
+GLfloat skyboxVertices[] = {
+    //Top
+    -1.0f,1.0f,-1.0f,
+    -1.0f,1.0f,1.0f,
+     1.0f,1.0f,1.0f,
+     1.0f,1.0f,-1.0f,
+
+    //Bottom
+     1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,
+     1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f, 1.0f,
+
+    //Left
+    -1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+
+    //Right
+    1.0f, -1.0f, -1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f, -1.0f,
+    1.0f, -1.0f, 1.0f,
+
+    //Front
+    -1.0f, -1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f, -1.0f, 1.0f,
+
+    //Back
+    -1.0f, -1.0f, -1.0f,
+    1.0f, 1.0f, -1.0f,
+    -1.0f, 1.0f, -1.0f,
+    1.0f, -1.0f, -1.0f
+};
+
+
+
+GLuint skyboxIndices[] = {
+    //Top
+    0, 1, 2, 0, 2, 3,
+
+    //Bottom
+    4, 5, 6, 4, 7, 5,
+
+    //Left
+    5, 7, 1, 5, 1, 0,
+
+    //Right
+    6, 2, 3, 6, 4, 2,
+
+    //Front
+    7, 2, 1, 7, 4, 2,
+
+    //Back
+    5, 3, 0, 5, 6, 3 
+};
+
+GLfloat skyboxTexCoords[] = {
+    //Top
+    0, 0, 
+    0, 1, 
+    1, 1,
+    1, 0,
+
+    //Bottom
+    1, 0, 
+    0, 1, 
+    1, 1,
+    0, 0,
+
+    //Left
+    0, 1, 
+    1, 1, 
+    1, 0,
+    0, 0,
+
+    //Right
+    1, 1, 
+    0, 0, 
+    1, 0,
+    0, 1,
+
+    //Front
+    0, 1, 
+    1, 0, 
+    0, 0,
+    1, 1,
+
+    //Back
+    1, 1, 
+    0, 0, 
+    1, 0,
+    0, 1,
+};
+
+
+//Load models, textures, shaders
 void InitSkybox(mat4 projectionMatrix)
 {
     skyboxProgram = loadShaders((char*)"shaders/skybox.vert", (char*)"shaders/skybox.frag");
 
     glUseProgram(skyboxProgram);
     glUniformMatrix4fv(glGetUniformLocation(skyboxProgram, "ViewToProjection"), 1, GL_TRUE, projectionMatrix.m);
-
 
     skyTop = LoadDataToModel( 
             skyboxTopVertices, 
@@ -189,6 +292,7 @@ void InitSkybox(mat4 projectionMatrix)
 
 }
 
+//Should combine into a single draw call with GL_TEXTURE_CUBE_MAP, but too lazy
 void DrawSkybox(mat4 cameraMatrix)
 {
     glUseProgram(skyboxProgram);
@@ -206,4 +310,5 @@ void DrawSkybox(mat4 cameraMatrix)
     DrawModel(skyFront, skyboxProgram, (char*)"inPosition", NULL, (char*)"inTexCoord");
     glBindTexture(GL_TEXTURE_2D, skyboxBackTexture);
     DrawModel(skyBack, skyboxProgram, (char*)"inPosition", NULL, (char*)"inTexCoord");
+
 }
