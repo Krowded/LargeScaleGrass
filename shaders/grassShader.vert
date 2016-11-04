@@ -19,6 +19,7 @@ uniform vec2 vertices[160]; //Pre-made grass shapes
 uniform vec2 normals[160]; //Pre-made normals
 uniform mat4 worldToProjection;
 uniform float time;
+uniform float thicknessScale;
 
 //uniform mat4 globalLength //Can be used to simulate grass growing as well as give external control. Good for demo
 //uniform float globalThickness //Ditto
@@ -33,7 +34,7 @@ void main(void)
 
 	//Thickness tapers off towards top to make a pointy blade of grass
 	//float thickness = (16-(gl_VertexID*0.5))*(1/16)*in_Thickness; //What it does
-	float thickness = in_Thickness-(gl_VertexID*0.03125)*in_Thickness; //Optimized
+	float thickness = thicknessScale*in_Thickness-(gl_VertexID*0.03125)*in_Thickness; //Optimized
 
 	//Half the vertices expand towards z, other half towards -z
 	//gl_Position = vec4(in_Position.xy, (1 - 2*mod(gl_VertexID,2))*thickness, 1.0);

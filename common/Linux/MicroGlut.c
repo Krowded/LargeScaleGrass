@@ -32,6 +32,10 @@
 // 150924: Added support for special keys.
 // 160302: Added glutShowCursor and glutHideCursor.
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+#pragma GCC diagnostic ignored "-Wsign-compare"
+
+
 #define _BSD_SOURCE
 #include <math.h>
 #include <stdlib.h>

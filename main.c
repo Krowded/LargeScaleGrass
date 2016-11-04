@@ -16,7 +16,7 @@
 #include <iostream>
 
 bool isGravityOn = true;
-const GLfloat standardDistanceFromGround = 8;
+const GLfloat standardDistanceFromGround = 6;
 
 
 GLfloat windowWidth;
@@ -51,7 +51,6 @@ Model* GenerateTerrain(TextureData *tex)
 	GLfloat *texCoordArray = (GLfloat*)malloc(sizeof(GLfloat) * 2 * vertexCount);
 	GLuint *indexArray = (GLuint*)malloc(sizeof(GLuint) * triangleCount*3);
 	
-	printf("bpp %d\n", tex->bpp);
 	for (x = 0; x < tex->width; x++)
 		for (z = 0; z < tex->height; z++)
 		{
@@ -84,7 +83,7 @@ Model* GenerateTerrain(TextureData *tex)
 				vec3 upDownVector = SetVector( (vertexArray[(x + (z - 1) * tex->width)*3 + 0] - vertexArray[(x + (z + 1) * tex->width)*3 + 0]),
 											   (vertexArray[(x + (z - 1) * tex->width)*3 + 1] - vertexArray[(x + (z + 1) * tex->width)*3 + 1]),
 											   (vertexArray[(x + (z - 1) * tex->width)*3 + 2] - vertexArray[(x + (z + 1) * tex->width)*3 + 2]));
-				vec3 normalVector = (CrossProduct(upDownVector, leftRightVector));
+				vec3 normalVector = Normalize(CrossProduct(upDownVector, leftRightVector));
 				normalArray[(x + z * tex->width)*3 + 0] = normalVector.x;
 				normalArray[(x + z * tex->width)*3 + 1] = normalVector.y;
 				normalArray[(x + z * tex->width)*3 + 2] = normalVector.z;
@@ -98,25 +97,6 @@ Model* GenerateTerrain(TextureData *tex)
 		}
 
 	// End of terrain generation
-	
-	//Generate normals on the tiles
-	numberOfTiles = (tex->width - 1) * (tex->height - 1);
-	tileNormalsArray = (vec3*)malloc(sizeof(vec3)*numberOfTiles); //Need to free after use
-	for (x = 0; x < tex->width-1; x++)
-		for (z = 0; z < tex->height-1; z++)
-		{
-			// Tile normal vectors. Used to for grass tiles (normal over the tile)
-			vec3 leftRightVector = SetVector( (vertexArray[(x + z * tex->width)*3 + 0] - vertexArray[(x + 1 + z * tex->width)*3 + 0]),
-											  (vertexArray[(x + z * tex->width)*3 + 1] - vertexArray[(x + 1 + z * tex->width)*3 + 1]),
-											  (vertexArray[(x + z * tex->width)*3 + 2] - vertexArray[(x + 1 + z * tex->width)*3 + 2]));
-
-			vec3 upDownVector = SetVector( (vertexArray[(x + z * tex->width)*3 + 0] - vertexArray[(x + (z + 1) * tex->width)*3 + 0]),
-										   (vertexArray[(x + z * tex->width)*3 + 1] - vertexArray[(x + (z + 1) * tex->width)*3 + 1]),
-										   (vertexArray[(x + z * tex->width)*3 + 2] - vertexArray[(x + (z + 1) * tex->width)*3 + 2]));
-			
-			tileNormalsArray[x + z * (tex->width-1)] = Normalize(CrossProduct(Normalize(upDownVector), Normalize(leftRightVector)));
-		}
-
 
 	// Create Model and upload to GPU:
 
@@ -167,7 +147,7 @@ void init(void)
 	
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(terrainProgram, "backgroundTexture"), 0); // Texture unit 0
-	LoadTGATextureSimple((char*)"textures/10008-v2.tga", &tex1);
+	LoadTGATextureSimple((char*)"textures/grass_texture237.tga", &tex1);
 
 	glUseProgram(modelProgram);
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
@@ -178,8 +158,8 @@ void init(void)
 	printError("init terrain");
 
 	InitSkybox(projectionMatrix);
-	GLuint numberOfTiles = (ttex.width-1)*(ttex.height-1);
-	InitGrass(projectionMatrix, numberOfTiles, (vec3*)(tm->vertexArray), tileNormalsArray);
+	GLuint numberOfTiles = (ttex.width)*(ttex.height);
+	InitGrass(projectionMatrix, numberOfTiles, (vec3*)(tm->vertexArray), (vec3*)(tm->normalArray));
 	free(tileNormalsArray); //Not using it anymore
 
 

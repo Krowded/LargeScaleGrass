@@ -10,6 +10,8 @@
 // NOTE: LoadTGA does NOT support all TGA variants! You may need to re-save your TGA
 // with different settings to find a suitable format.
 
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 #include "LoadTGA.h"
 
 static bool gMipmap = true;

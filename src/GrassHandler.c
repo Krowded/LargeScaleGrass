@@ -26,16 +26,18 @@ struct Straw {
 	//vec2 normals[vertNum];
 };
 
-const GLfloat baseSizeModifier = 5;
+const GLfloat grassLengthModifier = 6.0f;
 const GLint maxGrassPerTile = 3000;
-const GLuint totalLevelsOfDetail = 5;
-const GLuint levelsOfDetail[] = { 250, 175, 80, 40, 20 };
-const GLfloat sortingDistances[] = { 10.0f, 20.0f, 40.0f, 80.0f, 1000.0f };
+const GLuint totalLevelsOfDetail = 4;
+const GLuint levelsOfDetail[] = { 800, 200, 50, 25, 25 };
+const GLfloat sortingDistances[] = { 20.0f, 40.0f, 80.0f, 160.0f, 1000.0f };
+const GLfloat thicknessScale[] = { 1.0f, 1.5f, 2.5f, 4.0f, 5.0f };
+
 const GLint totalNumberOfStraws = 160000;
-const GLfloat grassMinSize = 0.02;
-const GLfloat grassMaxSize = 0.05;
-const GLfloat grassMaxThickness = 0.20;
-const GLfloat grassMinThickness = 0.04;
+const GLfloat grassMinLength = 0.02;
+const GLfloat grassMaxLength = 0.09;
+const GLfloat grassMaxThickness = 0.3;
+const GLfloat grassMinThickness = 0.1;
 const GLfloat grassMaxHue = 1.5;
 const GLfloat grassMinHue = 0.0;
 
@@ -52,7 +54,7 @@ GLfloat globalTime = 0;
 //One VAO for all the grass
 GLuint grassVAO;
 GLuint tileVBO, strawVBO, tileHeightBuffer;
-GLuint tileTransformationLocation, tileHeightLocation;
+GLuint tileTransformationLocation, tileHeightLocation, thicknessScaleLocation;
 
 //Tiles
 LOCAL GLuint totalNumberOfTiles;
@@ -63,18 +65,20 @@ void GenerateGrass() {
 	//Procedural generation of the grass
 	srand(0); //Constant seed means it will look the same every time
 	for(int i = 0; i < totalNumberOfStraws; ++i) {
-		GLfloat length = (float(rand() % 1000*grassMaxSize)/1000.0f + grassMinSize) * baseSizeModifier;
+		GLfloat length = max(grassMaxLength * float(rand() % 1000)/1000.0f, grassMinLength) * grassLengthModifier;
 		GLfloat angle = M_PI * float(rand() % 1000)/500.0f;
-		GLfloat displacementx = tileSize * float(rand() % 1000)/1000.0f;
-		GLfloat displacementz = tileSize * float(rand() % 1000)/1000.0f;
+		GLfloat displacementx = 2 * tileSize * float(rand() % 1000)/1000.0f; //bigger spread than tilesize to avoid noticable tiling on slopes
+		displacementx -= tileSize;
+		GLfloat displacementz = 2 * tileSize * float(rand() % 1000)/1000.0f;
+		displacementz -= tileSize;
 
 		mat4 scaling = S(length, length, length);
 		mat4 rotation = Ry(angle);
 		mat4 translation = T(displacementx, 0, displacementz);
 		Straws[i].transformation = Transpose(Mult(translation, Mult(rotation, scaling)));
 
-		Straws[i].thickness = max(grassMaxThickness*(float)(rand() % 1000)/1000.0f, grassMinThickness);
-		Straws[i].hue = max(grassMaxHue*(float)(rand() % 1000)/1000.0f, grassMinHue);
+		Straws[i].thickness = max(grassMaxThickness*float(rand() % 1000)/1000.0f, grassMinThickness);
+		Straws[i].hue = max(grassMaxHue*float(rand() % 1000)/1000.0f, grassMinHue);
  	}
 
 
@@ -160,6 +164,10 @@ void GenerateGrass() {
 	glUniform2fv(glGetUniformLocation(grassProgram, "normals"), 5*vertNum, combinedNormals);
 
 	printError("upload normal");
+
+	thicknessScaleLocation = glGetUniformLocation(grassProgram, "thicknessScale");
+	
+	printError("set thicknessScale location");
 
     glBindVertexArray(0);
 }	
@@ -304,6 +312,8 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix, vec3 lightVector)
 		if(totalInstances < 1)
 			continue;
 		
+		glUniform1f(thicknessScaleLocation, thicknessScale[i]);
+
 		//Tile (any way to skip this step?)
 		glBindBuffer(GL_ARRAY_BUFFER, tileVBO);
 		glBufferData(GL_ARRAY_BUFFER, numOfTilesToDraw * sizeof(mat4), tileTransformations[i], GL_DYNAMIC_DRAW);
