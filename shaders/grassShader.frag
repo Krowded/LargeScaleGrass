@@ -44,6 +44,5 @@ void main(void)
 	
 	
 	//Get texture
- 	out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade;
- 	out_Color.rb = frag_hue * out_Color.rb;
+ 	out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade * frag_hue;
 }

@@ -8,6 +8,7 @@
 #include "GrassHandler.h"
 
 #define LOCAL static
+#define max(x,y) x > y ? x : y
 
 #define tileSize 1.0f
 
@@ -33,7 +34,9 @@ const GLfloat sortingDistances[] = { 10.0f, 20.0f, 40.0f, 80.0f, 1000.0f };
 const GLint totalNumberOfStraws = 160000;
 const GLfloat grassMinSize = 0.02;
 const GLfloat grassMaxSize = 0.05;
+const GLfloat grassMaxThickness = 0.20;
 const GLfloat grassMinThickness = 0.04;
+const GLfloat grassMaxHue = 1.5;
 const GLfloat grassMinHue = 0.0;
 
 //Array of arrays to upload
@@ -70,8 +73,8 @@ void GenerateGrass() {
 		mat4 translation = T(displacementx, 0, displacementz);
 		Straws[i].transformation = Transpose(Mult(translation, Mult(rotation, scaling)));
 
-		Straws[i].thickness = (rand() % 1500)/10000.0f + grassMinThickness;
-		Straws[i].hue = float((rand() % 1500))/1000.0f + grassMinHue;
+		Straws[i].thickness = max(grassMaxThickness*(float)(rand() % 1000)/1000.0f, grassMinThickness);
+		Straws[i].hue = max(grassMaxHue*(float)(rand() % 1000)/1000.0f, grassMinHue);
  	}
 
 
@@ -326,11 +329,10 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix, vec3 lightVector)
 	}
 
 	//FPS
-	static int frameCounter = 0;
-	frameCounter++;
-	if(frameCounter > 120) { 
+	static GLint lastTick = globalTime;
+	if(globalTime - lastTick > 20) { 
 		std::cout << "Drawing " << strawCount  << " straws" << std::endl;
-		frameCounter = 0;
+		lastTick = globalTime;
 	}
 }
 
