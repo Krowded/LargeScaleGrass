@@ -27,13 +27,13 @@ struct Straw {
 
 const GLfloat baseSizeModifier = 5;
 const GLint maxGrassPerTile = 3000;
-const GLuint totalLevelsOfDetail = 3;
-const GLuint levelsOfDetail[] = { 1000, 100, 50 };
-const GLfloat sortingDistances[] = { 20.0f, 50.0f, 100.0f };
+const GLuint totalLevelsOfDetail = 5;
+const GLuint levelsOfDetail[] = { 250, 175, 80, 40, 20 };
+const GLfloat sortingDistances[] = { 10.0f, 20.0f, 40.0f, 80.0f, 1000.0f };
 const GLint totalNumberOfStraws = 160000;
-const GLfloat grassMinSize = 0.01;
+const GLfloat grassMinSize = 0.02;
 const GLfloat grassMaxSize = 0.05;
-const GLfloat grassMinThickness = 0.01;
+const GLfloat grassMinThickness = 0.04;
 const GLfloat grassMinHue = 0.0;
 
 //Array of arrays to upload
@@ -181,7 +181,7 @@ void GenerateTiles(vec3* tilePositions, vec3* tileNormals)
 		//rotationAxis = SetVector(1,0,0);
 		GLfloat diffAngle = acos( DotProduct(upVector, tileNormals[i]));
 		mat4 rotation = ArbRotate(rotationAxis, diffAngle);
-		mat4 translation = T(tilePositions[i].x, tilePositions[i].y+0.1, tilePositions[i].z);
+		mat4 translation = T(tilePositions[i].x, tilePositions[i].y+0.3, tilePositions[i].z);
 		Tiles[i].transformation = Transpose(Mult(translation, rotation));
 	}
     printError("generate tiles");
@@ -303,7 +303,7 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix, vec3 lightVector)
 		
 		//Tile (any way to skip this step?)
 		glBindBuffer(GL_ARRAY_BUFFER, tileVBO);
-		glBufferData(GL_ARRAY_BUFFER, numOfTilesToDraw * sizeof(mat4), tileTransformations[i], GL_STREAM_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numOfTilesToDraw * sizeof(mat4), tileTransformations[i], GL_DYNAMIC_DRAW);
 		glVertexAttribDivisor(tileTransformationLocation, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+1, strawsPerTile);
 		glVertexAttribDivisor(tileTransformationLocation+2, strawsPerTile);
@@ -311,7 +311,7 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix, vec3 lightVector)
 		
 		//Needed for wind
 		glBindBuffer(GL_ARRAY_BUFFER, tileHeightBuffer);
-		glBufferData(GL_ARRAY_BUFFER, numOfTilesToDraw * sizeof(GLfloat), tileHeights[i], GL_STREAM_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, numOfTilesToDraw * sizeof(GLfloat), tileHeights[i], GL_DYNAMIC_DRAW);
 		glVertexAttribDivisor(tileHeightLocation, strawsPerTile);
 		
 		//Grass Transformations

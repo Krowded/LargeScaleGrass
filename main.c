@@ -16,7 +16,7 @@
 #include <iostream>
 
 bool isGravityOn = true;
-const GLfloat standardDistanceFromGround = 6;
+const GLfloat standardDistanceFromGround = 8;
 
 
 GLfloat windowWidth;
@@ -60,8 +60,8 @@ Model* GenerateTerrain(TextureData *tex)
 			vertexArray[(x + z * tex->width)*3 + 1] = tex->imageData[(x + z * tex->width) * (tex->bpp/8)] / 10.0;
 			vertexArray[(x + z * tex->width)*3 + 2] = z / 1.0;
 // Texture coordinates. You may want to scale them.
-			texCoordArray[(x + z * tex->width)*2 + 0] = (GLfloat)x/4.0f;//(float)x / tex->width;
-			texCoordArray[(x + z * tex->width)*2 + 1] = (GLfloat)z/4.0f;//(float)z / tex->height;
+			texCoordArray[(x + z * tex->width)*2 + 0] = (GLfloat)x/10.0f;//(float)x / tex->width;
+			texCoordArray[(x + z * tex->width)*2 + 1] = (GLfloat)z/10.0f;//(float)z / tex->height;
 		}
 	for (x = 0; x < tex->width-1; x++)
 		for (z = 0; z < tex->height-1; z++)
@@ -166,8 +166,8 @@ void init(void)
 	printError("init shader");
 	
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-	glUniform1i(glGetUniformLocation(terrainProgram, "tex"), 0); // Texture unit 0
-	LoadTGATextureSimple((char*)"textures/grass_texture237.tga", &tex1);
+	glUniform1i(glGetUniformLocation(terrainProgram, "backgroundTexture"), 0); // Texture unit 0
+	LoadTGATextureSimple((char*)"textures/10008-v2.tga", &tex1);
 
 	glUseProgram(modelProgram);
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
@@ -179,12 +179,11 @@ void init(void)
 
 	InitSkybox(projectionMatrix);
 	GLuint numberOfTiles = (ttex.width-1)*(ttex.height-1);
-	//GLuint numberOfTiles = 10000;
 	InitGrass(projectionMatrix, numberOfTiles, (vec3*)(tm->vertexArray), tileNormalsArray);
 	free(tileNormalsArray); //Not using it anymore
 
 
-// Load models
+	// Load models
 	m = LoadModelPlus((char*)"models/groundsphere.obj");
 }
 
@@ -218,9 +217,8 @@ void display(void)
 	//Draw terrain
 	glUseProgram(terrainProgram);
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "mdlMatrix"), 1, GL_TRUE, camMatrix.m);
-	glUniform3fv(glGetUniformLocation(terrainProgram, "lightVector"), 1, &rotatedLightVector.x);
-	
-	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
+	glUniform3fv(glGetUniformLocation(terrainProgram, "lightVector"), 1, &rotatedLightVector.x);	
+	glBindTexture(GL_TEXTURE_2D, tex1);
 	DrawModel(tm, terrainProgram, (char*)"inPosition", (char*)"inNormal", (char*)"inTexCoord");
 
 	printError("display terrain");
