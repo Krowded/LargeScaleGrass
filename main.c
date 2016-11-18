@@ -346,8 +346,17 @@ void CameraControl(int time)
 	if (glutKeyIsDown('e'))
 		camBaseMatrix = Mult( T( 0, -1, 0), camBaseMatrix);
 
-	if(glutKeyIsDown(' '))
-		isGravityOn = !isGravityOn;
+	{ //Toggle gravity
+		static bool alreadyPressed = false;
+		if(glutKeyIsDown(' ')) {
+			if(!alreadyPressed) {
+				isGravityOn = !isGravityOn;
+				alreadyPressed = true;
+			}
+		} else { 
+			alreadyPressed = false;
+		}
+	}
 
 	//Adjust height to map
 	if(isGravityOn)
@@ -359,6 +368,32 @@ void CameraControl(int time)
 			float heightDifference = (camBaseMatrix.m)[7] - height;
 			(camBaseMatrix.m)[7] = (camBaseMatrix.m)[7] - heightDifference;
 		}
+	}
+	
+	{//Toggle level of detail
+		static bool alreadyPressed = false;
+		
+		if(!alreadyPressed) {
+			if(glutKeyIsDown('1')) {
+				SetLevelsOfDetail(1);
+				alreadyPressed = true;
+			} else if(glutKeyIsDown('2')) {
+				SetLevelsOfDetail(2);
+				alreadyPressed = true;
+			} else if(glutKeyIsDown('3')) {
+				SetLevelsOfDetail(3);
+				alreadyPressed = true;
+			} else if(glutKeyIsDown('4')) {
+				SetLevelsOfDetail(4);
+				alreadyPressed = true;
+			} else if(glutKeyIsDown('5')) {
+				SetLevelsOfDetail(5);
+				alreadyPressed = true;
+			}
+		} else {
+			alreadyPressed = false;
+		}
+	
 	}
 
 	//Pass it off to update camMatrix

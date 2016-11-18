@@ -28,18 +28,20 @@ struct Straw {
 
 const GLfloat grassLengthModifier = 6.0f;
 const GLint maxGrassPerTile = 3000;
-const GLuint totalLevelsOfDetail = 4;
+const GLuint totalLevelsOfDetail = 5;
 const GLuint levelsOfDetail[] = { 800, 200, 50, 25, 25 };
 const GLfloat sortingDistances[] = { 20.0f, 40.0f, 80.0f, 160.0f, 1000.0f };
 const GLfloat thicknessScale[] = { 1.0f, 1.5f, 2.5f, 4.0f, 5.0f };
 
-const GLint totalNumberOfStraws = 160000;
+const GLint totalNumberOfStraws = 240000;
 const GLfloat grassMinLength = 0.02;
 const GLfloat grassMaxLength = 0.09;
 const GLfloat grassMaxThickness = 0.3;
 const GLfloat grassMinThickness = 0.1;
 const GLfloat grassMaxHue = 1.5;
 const GLfloat grassMinHue = 0.0;
+
+GLuint currentLevelsOfDetail = 1;
 
 //Array of arrays to upload
 mat4* tileTransformations[totalLevelsOfDetail];
@@ -60,6 +62,12 @@ GLuint tileTransformationLocation, tileHeightLocation, thicknessScaleLocation;
 LOCAL GLuint totalNumberOfTiles;
 Tile* Tiles;
 Straw Straws[totalNumberOfStraws];
+
+//Used to control which ones get drawn (as in "all levels up to the current one")
+void SetLevelsOfDetail(int levels) {
+	currentLevelsOfDetail = levels;
+}
+
 
 void GenerateGrass() {
 	//Procedural generation of the grass
@@ -303,7 +311,7 @@ void DrawGrass(GLuint globalTime, mat4 worldMatrix, vec3 lightVector)
 	}
 
 	//Sort by distance for every level of detail
-	for(GLuint i = 0; i < totalLevelsOfDetail; ++i) {
+	for(GLuint i = 0; i < currentLevelsOfDetail; ++i) {
 
 		GLuint strawsPerTile = levelsOfDetail[i];
 		GLuint numOfTilesToDraw = tilesToProcess[i];

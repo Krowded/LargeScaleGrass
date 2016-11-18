@@ -12,8 +12,8 @@ uniform sampler2D tex;
 uniform vec3 light;
 uniform vec3 up;
 
-const float skylight = 0;//0.4;
-const float earthlight = 0;//0.1;
+const float skylight = 0.3;
+const float earthlight = 0.05;
 const float diffuseConstant = 0.8;
 const float specularConstant = 0.2;
 const float textureOffset = 0.25;
@@ -31,7 +31,7 @@ void main(void)
 	float ambient = mix(earthlight, skylight, ratio); //Optimized
 
 	//Diffuse lighting
-	float diffuse = max(dot(normal, light), 0); //Can be optimized if we decide on a stationary light source (but already pretty cheap)
+	float diffuse = diffuseConstant*max(dot(normal, light), 0); //Can be optimized if we decide on a stationary light source (but already pretty cheap)
 
 	// Specular lighting
 	vec3 r = reflect(light, normal);
@@ -40,8 +40,7 @@ void main(void)
 	specular = pow(max(specular,0), 150.0);
 
 	//Add up
-	float shade = min(1, (ambient + diffuseConstant*diffuse) + specularConstant*specular);
-	
+	float shade = min(1, (ambient + diffuse) + specularConstant*specular);
 	
 	//Get texture
  	out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade * frag_hue;
