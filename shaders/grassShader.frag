@@ -43,5 +43,6 @@ void main(void)
 	float shade = min(1, (ambient + diffuse) + specularConstant*specular);
 	
 	//Get texture
- 	out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade * frag_hue;
+ 	//out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade * frag_hue;
+ 	out_Color = texture(tex, frag_texCoords*textureOffset + textureType) * shade * vec4(frag_hue, 1, frag_hue,1);
 }

@@ -147,7 +147,7 @@ void init(void)
 	
 	glUniformMatrix4fv(glGetUniformLocation(terrainProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(terrainProgram, "backgroundTexture"), 0); // Texture unit 0
-	LoadTGATextureSimple((char*)"textures/grass_texture237.tga", &tex1);
+	LoadTGATextureSimple((char*)"textures/10008-v2.tga", &tex1);
 
 	glUseProgram(modelProgram);
 	glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
@@ -161,10 +161,6 @@ void init(void)
 	GLuint numberOfTiles = (ttex.width)*(ttex.height);
 	InitGrass(projectionMatrix, numberOfTiles, (vec3*)(tm->vertexArray), (vec3*)(tm->normalArray));
 	free(tileNormalsArray); //Not using it anymore
-
-
-	// Load models
-	m = LoadModelPlus((char*)"models/groundsphere.obj");
 }
 
 
